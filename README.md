@@ -1,2 +1,2 @@
-# 2023-CyFi
-Entelect Challenge 2023 - CyFi
+# 2023-Cy-Fi
+Entelect Challenge 2023 - Cy-Fi
