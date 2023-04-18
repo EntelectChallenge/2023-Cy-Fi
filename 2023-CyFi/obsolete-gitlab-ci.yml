@@ -1,0 +1,15 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  DOCKER_REGISTRY: NOT_SET
+  REGION: $AWS_DEFAULT_REGION
+
+  DOCKER_TLS_CERTDIR: ""
+  DOCKER_HOST: tcp://docker:2375
+
+include: 
+  - local: '/Engine/.gitlab-ci.yml'
+  - local: '/GameRunner/.gitlab-ci.yml'
+  - local: '/Logger/.gitlab-ci.yml'

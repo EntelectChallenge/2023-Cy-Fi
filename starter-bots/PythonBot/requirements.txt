@@ -1,0 +1,8 @@
+certifi==2022.12.7
+charset-normalizer==3.1.0
+idna==3.4
+msgpack==1.0.2
+requests==2.28.2
+signalrcore==0.9.5
+urllib3==1.26.15
+websocket-client==1.0.0
