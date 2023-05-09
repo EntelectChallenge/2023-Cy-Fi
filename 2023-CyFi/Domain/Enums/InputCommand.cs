@@ -2,6 +2,7 @@
 {
     public enum InputCommand
     {
+        None = 0,
         UP = 1,
         DOWN = 2,
         LEFT = 3,
@@ -12,6 +13,8 @@
         DOWNRIGHT = 8,
         DIGDOWN = 9,
         DIGLEFT = 10,
-        DIGRIGHT = 11
+        DIGRIGHT = 11,
+        STEAL = 12,
+        RADAR = 13
     }
 }

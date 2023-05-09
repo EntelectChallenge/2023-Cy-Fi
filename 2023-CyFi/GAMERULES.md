@@ -1,14 +1,21 @@
-# Entelect Challenge 2023: Cy-Fi 🏆
+# Entelect Challenge 2023: Cy-Fi 🏆 Release 2023.2.0
 
 ---
->### _NB:_ Game is a work in progress 🧑‍💻
->\
->Please note that the initial release is a **work in progress** 🔧. As such, additional patches and improvements will be made. 🐛
+>### _NB:_ Change log 
 >
->We are currently developing an exiting new feature, which will be released as soon as possible. 💪
+>* Bug fixes🐛
+>   - infinite jumping
+>   - world generation not deterministic 
+> * Features 🧪
+>   - [antagonistic action](#steal)
+>   - [radar](#radar)
+>   - [hazard implementation](#game-objects)
+>   - max ticks (game ends after a max amount of ticks is reached)
 >
->\
->We welcome all feedback, so please let us know if you encounter any bugs.😊
+> * Reported Bugs:
+>   - When falling and move into a solid, bot sticks to solid
+>   - When on a corner/vertex of a solid bot does not fall
+>
 
 ---
 
@@ -32,7 +39,7 @@ However, players must be wary of other bots in the world!
   - [Heroes](#heroes)
   - [The Map](#the-map)
   - [Visibility](#visibility)
-  - [Radar (WIP 🔧)](#radar-wip-)
+  - [Radar](#radar)
   - [Game Objects](#game-objects)
   - [The Commands](#the-commands)
     - [Command: UP](#command-up)
@@ -41,11 +48,14 @@ However, players must be wary of other bots in the world!
     - [Command: UPRIGHT/UPLEFT](#command-uprightupleft)
     - [Command: DOWNRIGHT/DOWNLEFT](#command-downrightdownleft)
     - [Command: DIGDOWN/DIGRIGHT/DIGLEFT](#command-digdowndigrightdigleft)
-    - [STEAL](#steal)
+    - [Command: STEAL](#command-steal)
+    - [Command: RADAR](#command-radar)
   - [Command Structure](#command-structure)
   - [GAME TICK PAYLOAD](#game-tick-payload)
-  - [ENDGAME](#endgame)
+  - [END GAME](#endgame)
   - [SCORING](#scoring)
+  - [THE MATH](#the-math)
+    - [Radar Distance Calculation](#radar-distance-calculation)
 
 ---
 
@@ -100,9 +110,11 @@ The heroes can only see a certain distance around themselves. `16` tiles vertica
 _A generated view of the Hero's point of view (`HeroWindow`):  hero(`bot`) "pink", `Solid` "brown", `Ladders` "blue", `Platforms` green, `Air` "white", `Collectibles` "black" and `Hazards` "red"_
 ![Hero Window](./Assests/hero_windo.png)
 
-## Radar (WIP 🔧)
+## Radar
 
-_Work in progress_
+The radar can be used by a player to track the location of an opponent. The exact location will not be specified, only the general direction and approximate distance will be given. See [Command:RADAR](#command-radar)
+
+📒 _Note: Hero's can only see the location of an opponent with more collectables than themselves. So watch your back!_
 
 ## Game Objects
 
@@ -111,10 +123,10 @@ The map has the following tiles (pixels) :
 - `Air` - 0 - Normal, open, breathable air.
 - `Solid` - 1 - A solid object, the hero can only collide with this object. No interactions.
 - `Collectible` - 2 - Collectibles are what you need to collect... just try to get the most.
-- `Hazard` (WIP 🔧) - 3 - When the hero interacts with a hazard, a bad thing will happen. So... don't
+- `Hazard`- 3 - When the hero interacts with a hazard, the Hero will be teleported back to the starting point of the level! So... don't
 - `Platform` - 4 - Normal, walkable platform.
 - `Ladder` -  5 - Want to go up? Jump. Want to go higher? Use a ladder.
-- `Opponent` (WIP 🔧) - 6 - opposing players on the map
+- `Opponent`- 6 - opposing players on the map
 
 --
 ## The Commands
@@ -136,7 +148,8 @@ The Commands are as follows:
 * `DIGDOWN` - 9
 * `DIGLEFT` - 10
 * `DIGRIGHT` - 11
-* `STEAL` - 12 (WIP 🔧)
+* `STEAL` - 12
+* `RADAR` - 13
 
 ### Command: UP
 
@@ -183,9 +196,20 @@ Players are able to dig through `Solid` in the specified directions.
 📒 _Note: Digging though a certain amount of solid will earn you a collectable!_
 
 ---
-### STEAL
+### Command: STEAL
 
-🔨  _Note: Apologies we are still working on it!_
+In this universe crime is legal 😈. Hero's are allowed to steal `collectables` from one another. They will get a percentage of the player's wealth 
+
+📒 _Note: Heros can only steal from opponents with more collectables than themselves - not all heros wear capes_🦸🦸‍♂️🦹🦹
+
+---
+### Command: RADAR
+
+Stealing is all well and good but if you don't know where the opponent is then what's the point. Thankfully Radar has your back 💪
+
+Heros can use this ability to locate their opponents 
+
+📒 _Note: As previously stated: Hero's can only see the location of an opponent with more collectables than themselves. So watch your back!_
 
 ---
 ## Command Structure
@@ -209,7 +233,8 @@ This will consist of the following values:
  - `ElapsedTime` - Time elapsed since game started
  - `HeroWindow` - The number of tiles a hero can view around themselves
  - `X` - Hero's current x position
- - `Y` - Hero's current y position
+  - `Y` - Hero's current y position
+  - `RadarData` - The general location of an opponent (contains the direction and an estimate of the distance relative to the player)
 
 Example payload
 
@@ -256,6 +281,13 @@ hero Window:
 
 X:                  24
 Y:                  12
+RadarData:          [
+                      {
+                        8,                    //DOWNRIGHT
+                        4                     //With-in 75% of the total range 
+                      },
+                    ...
+                    ]
 ```
 
 
@@ -272,3 +304,33 @@ When a hero completes `level` 4, the game ends and that hero is the winner. Subs
 Hero (`Bots`) get scores based on the amount of `collectibles` obtained. The hero that surpasses `level` four will gain extra points
 
 ---
+
+## THE MATH
+
+### Radar Distance Calculation
+
+The distance between the hero and the opponent is calculated. The distance is then divided by the `RadarRange` (The rage of the hero's radar) to get the `PercentageDistance`
+
+```
+ percentageDistance = distance/radarRange * 100
+
+```
+
+A numeric value is then assigned based on the `PercentageDistance` please see the following 👇
+
+```c
+            if (percentageDistance > 100)
+                return 0;
+            else if (percentageDistance > 75)
+                return 4;
+            else if (percentageDistance > 50)
+                return 3;
+            else if (percentageDistance > 25)
+                return 2;
+            else
+                return 1;
+``` 
+
+📒 _Note: This is meant to give a general idea of the opponents location._
+
+

@@ -1,5 +1,4 @@
-﻿using CyFi.Physics.Movement;
-using CyFi.Physics.Utils;
+﻿using CyFi.Physics.Utils;
 using Domain.Enums;
 
 namespace CyFi.Physics.Movement;
@@ -48,12 +47,21 @@ public class Falling : BaseState
     {
         base.UpdatePhysics();
         movementSm.GameObject.deltaY = -1;
-        if (Collisions.OnlyAirBelow(movementSm.GameObject, movementSm.World) && Collisions.NoHeroCollision(movementSm.GameObject, movementSm.CollidableObjects) && Movements.AttemptMove(movementSm))
+
+        var onlyAir = Collisions.OnlyAirBelow(movementSm.GameObject, movementSm.World);
+        var noCollisions = Collisions.NoHeroCollision(movementSm.GameObject, movementSm.CollidableObjects);
+        var attemptMove = Movements.AttemptMove(movementSm);
+
+        //   if (Collisions.OnlyAirBelow(movementSm.GameObject, movementSm.World) &&
+        //   Collisions.NoHeroCollision(movementSm.GameObject, movementSm.CollidableObjects) &&
+        //   Movements.AttemptMove(movementSm))
+        if (onlyAir && noCollisions && attemptMove)
         {
             Movements.UpdateHeroPositions(movementSm);
         }
         else
         {
+            movementSm.GameObject.deltaY = 0;
             movementSm.ChangeState(movementSm.Idle);
         }
     }

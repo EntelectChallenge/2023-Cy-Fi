@@ -1,14 +1,14 @@
 ﻿using CyFi.Entity;
 using CyFi.Factories;
 using CyFi.Models;
+using CyFi.Physics;
+using CyFi.Physics.Movement;
 using Domain.Enums;
 using Domain.Objects;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
+using Moq;
 using NUnit.Framework;
-using CyFi.Physics;
-using CyFi.Physics.Movement;
 
 namespace CyFiTests.Physics
 {
@@ -25,6 +25,12 @@ namespace CyFiTests.Physics
 
         List<HeroEntity> otherPlayers;
 
+        Mock<ILoggerFactory> mockLoggerFactory;
+
+        Guid Id = Guid.NewGuid();
+
+        WorldFactory WorldFactory;
+
         [SetUp]
         public void Setup()
         {
@@ -33,7 +39,9 @@ namespace CyFiTests.Physics
                 .AddEnvironmentVariables()
                 .Build();
 
-            testSettings = config.Get<CyFiGameSettings>();
+
+            WorldFactory = new WorldFactory(mockLoggerFactory.Object);
+            testSettings = config.GetSection("GameSettings").Get<CyFiGameSettings>();
 
             testWorld = WorldFactory.CreateWorld(testSettings.Levels.First(), 1);
             testWorld.map = new int[5][];
@@ -44,10 +52,10 @@ namespace CyFiTests.Physics
             }
             testWorld.map[4] = new int[2] { (int)ObjectType.Solid, (int)ObjectType.Air };
 
-            heroEntity = new HeroEntity(testSettings);
+            heroEntity = new HeroEntity(Id, testSettings);
             otherPlayers = new List<HeroEntity>();
             heroPhysicsUnderTest = (HeroPhysics)heroEntity.PhysicsComponent;
-            
+
             heroEntity.MovementSm.World = testWorld;
             heroEntity.MovementSm.CollidableObjects = otherPlayers;
         }
@@ -114,18 +122,18 @@ namespace CyFiTests.Physics
             Assert.IsTrue(heroEntity.MovementSm.GetStateType() == typeof(Idle));
             Assert.AreEqual(4, heroEntity.YPosition);
             Assert.AreEqual(0, heroEntity.XPosition);
-            
+
             heroPhysicsUnderTest.Update(heroEntity, otherPlayers, testWorld);
             Assert.IsTrue(heroEntity.MovementSm.GetStateType() == typeof(Falling));
             Assert.AreEqual(3, heroEntity.YPosition);
             Assert.AreEqual(0, heroEntity.XPosition);
-            
+
             heroPhysicsUnderTest.Update(heroEntity, otherPlayers, testWorld);
             // Assert.IsFalse(heroEntity.MovementSm.GetStateType() == typeof(Falling));
             Assert.AreEqual(2, heroEntity.YPosition);
             Assert.AreEqual(0, heroEntity.XPosition);
         }
-        
+
         [Test]
         public void GivenClimbingHero_UpdatePositionAccordingly()
         {
@@ -152,7 +160,7 @@ namespace CyFiTests.Physics
 
             heroEntity.MovementSm.UpdateInput(InputCommand.UP);
             Assert.IsTrue(heroEntity.MovementSm.GetStateType() == typeof(Moving));
-            
+
             heroPhysicsUnderTest.Update(heroEntity, otherPlayers, testWorld);
             Assert.IsTrue(heroEntity.MovementSm.GetStateType() == typeof(Idle));
             Assert.AreEqual(1, heroEntity.YPosition);
@@ -165,7 +173,7 @@ namespace CyFiTests.Physics
             Assert.IsTrue(heroEntity.MovementSm.GetStateType() == typeof(Idle));
             Assert.AreEqual(2, heroEntity.YPosition);
             Assert.AreEqual(0, heroEntity.XPosition);
-            
+
             heroEntity.MovementSm.UpdateInput(InputCommand.UP);
             Assert.IsTrue(heroEntity.MovementSm.GetStateType() == typeof(Moving));
 
@@ -173,7 +181,7 @@ namespace CyFiTests.Physics
             Assert.IsTrue(heroEntity.MovementSm.GetStateType() == typeof(Idle));
             Assert.AreEqual(3, heroEntity.YPosition);
             Assert.AreEqual(0, heroEntity.XPosition);
-            
+
             heroEntity.MovementSm.UpdateInput(InputCommand.UP);
             Assert.IsTrue(heroEntity.MovementSm.GetStateType() == typeof(Moving));
 
@@ -217,22 +225,22 @@ namespace CyFiTests.Physics
 
             heroEntity.MovementSm.UpdateInput(InputCommand.UP);
             Assert.IsTrue(heroEntity.MovementSm.GetStateType() == typeof(Jumping));
-            
+
             heroPhysicsUnderTest.Update(heroEntity, otherPlayers, testWorld);
             Assert.IsTrue(heroEntity.MovementSm.GetStateType() == typeof(Jumping));
             Assert.AreEqual(1, heroEntity.YPosition);
             Assert.AreEqual(0, heroEntity.XPosition);
-            
+
             heroPhysicsUnderTest.Update(heroEntity, otherPlayers, testWorld);
             Assert.IsTrue(heroEntity.MovementSm.GetStateType() == typeof(Jumping));
             Assert.AreEqual(2, heroEntity.YPosition);
             Assert.AreEqual(0, heroEntity.XPosition);
-            
+
             heroPhysicsUnderTest.Update(heroEntity, otherPlayers, testWorld);
             Assert.IsTrue(heroEntity.MovementSm.GetStateType() == typeof(Idle));
             Assert.AreEqual(2, heroEntity.YPosition);
             Assert.AreEqual(0, heroEntity.XPosition);
-            
+
             heroPhysicsUnderTest.Update(heroEntity, otherPlayers, testWorld);
             Assert.IsTrue(heroEntity.MovementSm.GetStateType() == typeof(Falling));
             Assert.AreEqual(1, heroEntity.YPosition);
@@ -276,24 +284,24 @@ namespace CyFiTests.Physics
 
             heroEntity.MovementSm.UpdateInput(InputCommand.UP);
             Assert.IsTrue(heroEntity.MovementSm.GetStateType() == typeof(Jumping));
-            
+
             heroPhysicsUnderTest.Update(heroEntity, otherPlayers, testWorld);
             Assert.IsTrue(heroEntity.MovementSm.GetStateType() == typeof(Jumping));
             Assert.AreEqual(2, heroEntity.YPosition);
             Assert.AreEqual(0, heroEntity.XPosition);
-            
+
             // hits solid ceiling here
             heroPhysicsUnderTest.Update(heroEntity, otherPlayers, testWorld);
             Assert.IsTrue(heroEntity.MovementSm.GetStateType() == typeof(Idle));
             Assert.AreEqual(2, heroEntity.YPosition);
             Assert.AreEqual(0, heroEntity.XPosition);
-            
+
             // starts falling
             heroPhysicsUnderTest.Update(heroEntity, otherPlayers, testWorld);
             Assert.IsTrue(heroEntity.MovementSm.GetStateType() == typeof(Falling));
             Assert.AreEqual(1, heroEntity.YPosition);
             Assert.AreEqual(0, heroEntity.XPosition);
-            
+
             // hits solid floor here
             heroPhysicsUnderTest.Update(heroEntity, otherPlayers, testWorld);
             Assert.IsTrue(heroEntity.MovementSm.GetStateType() == typeof(Idle));
@@ -324,12 +332,12 @@ namespace CyFiTests.Physics
                 testWorld.map[i] = new int[2] { (int)ObjectType.Air, (int)ObjectType.Air };
             }
 
-            HeroEntity otherPlayer = new(testSettings)
+            HeroEntity otherPlayer = new(Id, testSettings)
             {
                 XPosition = 6
             };
             otherPlayer.MovementSm.World = testWorld;
-            otherPlayer.MovementSm.CollidableObjects = new List<GameObject>{heroEntity};
+            otherPlayer.MovementSm.CollidableObjects = new List<GameObject> { heroEntity };
             otherPlayers.Add(otherPlayer);
 
             // Should be able to take 4 steps then collide
@@ -356,7 +364,7 @@ namespace CyFiTests.Physics
             heroEntity.XPosition = 0;
             heroEntity.YPosition = 4;
 
-            HeroEntity otherPlayer = new(testSettings);
+            HeroEntity otherPlayer = new(Id, testSettings);
             otherPlayers.Add(otherPlayer);
 
             //    start
@@ -373,17 +381,17 @@ namespace CyFiTests.Physics
             Assert.IsTrue(heroEntity.MovementSm.GetStateType() == typeof(Idle));
             Assert.AreEqual(4, heroEntity.YPosition);
             Assert.AreEqual(0, heroEntity.XPosition);
-            
+
             heroPhysicsUnderTest.Update(heroEntity, otherPlayers, testWorld);
             Assert.IsTrue(heroEntity.MovementSm.GetStateType() == typeof(Falling));
             Assert.AreEqual(3, heroEntity.YPosition);
             Assert.AreEqual(0, heroEntity.XPosition);
-            
+
             heroPhysicsUnderTest.Update(heroEntity, otherPlayers, testWorld);
             // Assert.IsFalse(heroEntity.MovementSm.GetStateType() == typeof(Falling));
             Assert.AreEqual(2, heroEntity.YPosition);
             Assert.AreEqual(0, heroEntity.XPosition);
-            
+
             heroPhysicsUnderTest.Update(heroEntity, otherPlayers, testWorld);
             // Assert.IsFalse(heroEntity.MovementSm.GetStateType() == typeof(Falling));
             Assert.AreEqual(2, heroEntity.YPosition);
@@ -446,9 +454,9 @@ namespace CyFiTests.Physics
             }
             testWorld.map[5][0] = (int)ObjectType.Collectible;
 
-            HeroEntity otherPlayer = new(testSettings);
+            HeroEntity otherPlayer = new(Id, testSettings);
             otherPlayer.MovementSm.World = testWorld;
-            otherPlayer.MovementSm.CollidableObjects = new List<GameObject>{heroEntity};
+            otherPlayer.MovementSm.CollidableObjects = new List<GameObject> { heroEntity };
             otherPlayer.XPosition = 3;
             otherPlayers.Add(otherPlayer);
 
@@ -516,6 +524,185 @@ namespace CyFiTests.Physics
             heroEntity.MovementSm.UpdateInput(InputCommand.RIGHT);
             heroPhysicsUnderTest.Update(heroEntity, otherPlayers, testWorld);
             Assert.AreEqual(81, heroEntity.Collected);
+        }
+
+
+        private void TestFalling(int mapWidth, int mapHeight, int platformHeight)
+        {
+            heroEntity.XPosition = 0;
+            heroEntity.YPosition = platformHeight + 1;
+
+
+            // Make sure hero is settled on the platform.
+            for (int i = 0; i < 3; i++)
+            {
+                heroEntity.PhysicsComponent.Update(heroEntity, otherPlayers, testWorld);
+            }
+
+            int expectedYPosition = platformHeight + 1;
+            Assert.AreEqual(expectedYPosition, heroEntity.YPosition);
+
+            // Move all the way to the right.
+            while (heroEntity.XPosition < mapWidth - (heroEntity.Width + 1))
+            {
+                heroEntity.MovementSm.UpdateInput(InputCommand.RIGHT);
+                heroEntity.PhysicsComponent.Update(heroEntity, otherPlayers, testWorld);
+            }
+            // Should be at end of map.
+            Assert.AreEqual(mapWidth - (heroEntity.Width + 1), heroEntity.XPosition);
+            // Should not have fallen.
+            Assert.AreEqual(expectedYPosition, heroEntity.YPosition);
+
+            // Move back to the left.
+            while (heroEntity.XPosition > 0)
+            {
+                heroEntity.MovementSm.UpdateInput(InputCommand.LEFT);
+                heroEntity.PhysicsComponent.Update(heroEntity, otherPlayers, testWorld);
+            }
+            // Should be at end of map.
+            Assert.AreEqual(0, heroEntity.XPosition);
+            // Should not have fallen.
+            Assert.AreEqual(expectedYPosition, heroEntity.YPosition);
+        }
+
+        [Test]
+        public void GivenFlatPlatform_HeroShouldNotFallOff()
+        {
+            // Initialise map
+            int mapWidth = testWorld.width, mapHeight = testWorld.height;
+            testWorld.map = new int[mapWidth][];
+            for (int x = 0; x < mapWidth; x++)
+            {
+                testWorld.map[x] = new int[mapHeight];
+            }
+
+            // Add a platform across the map at a set height.
+            int platformHeight = mapHeight / 2;
+            for (int x = 0; x < mapWidth; x++)
+            {
+                testWorld.map[x][platformHeight] = (int)ObjectType.Platform;
+            }
+
+            TestFalling(mapWidth, mapHeight, platformHeight);
+        }
+
+        [Test]
+        public void GivenPlatformWithLadders_HeroShouldNotFallOff()
+        {
+            // Initialise map
+            int mapWidth = testWorld.width, mapHeight = testWorld.height;
+            testWorld.map = new int[mapWidth][];
+            for (int x = 0; x < mapWidth; x++)
+            {
+                testWorld.map[x] = new int[mapHeight];
+            }
+
+            // Add a platform across the map at a set height.
+            int platformHeight = mapHeight / 2;
+            for (int x = 0; x < mapWidth; x++)
+            {
+                testWorld.map[x][platformHeight] = (int)ObjectType.Platform;
+            }
+
+            // Add a ladder going across the map.
+            int ladderPosition = mapWidth / 2;
+            for (int y = 0; y < mapHeight; y++)
+            {
+                testWorld.map[ladderPosition][y] = (int)ObjectType.Ladder;
+            }
+
+            TestFalling(mapWidth, mapHeight, platformHeight);
+        }
+
+        [Test]
+        public void GivenHeroJumpedOnPlatform_HeroShouldNotFall()
+        {
+            // Initialise map
+            int mapWidth = testWorld.width, mapHeight = testWorld.height;
+            testWorld.map = new int[mapWidth][];
+            for (int x = 0; x < mapWidth; x++)
+            {
+                testWorld.map[x] = new int[mapHeight];
+            }
+
+            // Add a platform across the map at a set height.
+            int platformHeight = mapHeight / 2;
+            for (int x = 0; x < mapWidth; x++)
+            {
+                testWorld.map[x][platformHeight] = (int)ObjectType.Platform;
+            }
+
+            // Place hero on top of the platform.
+            heroEntity.XPosition = 0;
+            heroEntity.YPosition = platformHeight + 1;
+
+            // Wait for the hero to be settled.
+            for (int i = 0; i < 3; i++)
+            {
+                heroEntity.PhysicsComponent.Update(heroEntity, otherPlayers, testWorld);
+            }
+
+            int expectedYPosition = platformHeight + 1;
+            Assert.AreEqual(expectedYPosition, heroEntity.YPosition);
+
+            // Jump
+            heroEntity.MovementSm.UpdateInput(InputCommand.UP);
+            heroEntity.PhysicsComponent.Update(heroEntity, otherPlayers, testWorld);
+            while (heroEntity.YPosition > expectedYPosition)
+            {
+                heroEntity.PhysicsComponent.Update(heroEntity, otherPlayers, testWorld);
+            }
+
+            // Move right
+            for (int i = 0; i < 5; i++)
+            {
+                heroEntity.MovementSm.UpdateInput(InputCommand.RIGHT);
+                heroEntity.PhysicsComponent.Update(heroEntity, otherPlayers, testWorld);
+            }
+            Assert.AreEqual(expectedYPosition, heroEntity.YPosition);
+        }
+
+        [Test]
+        public void GivenWorldSize_ShouldNotAllowLeavingWorldBounds()
+        {
+            // Initialise empty map.
+            testWorld.map = new int[testWorld.width][];
+            for (int x = 0; x < testWorld.width; x++)
+            {
+                testWorld.map[x] = new int[testWorld.height];
+                for (int y = 0; y < testWorld.height; y++)
+                {
+                    testWorld.map[x][y] = (int)ObjectType.Air;
+                }
+            }
+
+            heroEntity.XPosition = 0;
+            heroEntity.YPosition = 0;
+            heroEntity.MovementSm.UpdateInput(InputCommand.LEFT);
+            heroEntity.PhysicsComponent.Update(heroEntity, otherPlayers, testWorld);
+            Assert.AreEqual(0, heroEntity.XPosition);
+            Assert.AreEqual(0, heroEntity.YPosition);
+
+            heroEntity.XPosition = testWorld.width - (heroEntity.Width + 1);
+            heroEntity.MovementSm.UpdateInput(InputCommand.RIGHT);
+            Assert.AreEqual(0, heroEntity.YPosition);
+            Assert.AreEqual(testWorld.width - (heroEntity.Width + 1), heroEntity.XPosition);
+
+            // Add platform below player.
+            int platformHeight = testWorld.height - (heroEntity.Height + 2);
+            for (int x = 0; x < testWorld.width; x++)
+            {
+                testWorld.map[x][platformHeight] = (int)ObjectType.Platform;
+            }
+
+            // Try jumping
+            heroEntity.YPosition = platformHeight + 1;
+            heroEntity.MovementSm.UpdateInput(InputCommand.UP);
+            for (int i = 0; i < 3; i++)
+            {
+                heroEntity.PhysicsComponent.Update(heroEntity, otherPlayers, testWorld);
+            }
+            Assert.AreEqual(platformHeight + 1, heroEntity.YPosition);
         }
     }
 }

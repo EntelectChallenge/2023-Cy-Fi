@@ -1,12 +1,14 @@
 ﻿using Domain.Objects;
 using NUnit.Framework;
+using Moq;
+using Microsoft.Extensions.Logging;
 
 namespace DomainTests.Objects
 {
     [TestFixture]
     internal class WorldObjectTests
     {
-        private WorldObject? worldObjectUnderTest;
+        private WorldObject worldObjectUnderTest;
 
         private readonly int width = 20;
         private readonly int height = 20;
@@ -22,9 +24,14 @@ namespace DomainTests.Objects
         private readonly int level = 1;
         private readonly int numPaths = 5;
 
+
+        public Mock<ILogger<WorldObject>> mockWorldLogger;
+
         [SetUp]
         public void Setup()
         {
+           mockWorldLogger = new Mock<ILogger<WorldObject>>();
+
             worldObjectUnderTest = new WorldObject(
                 width,
                 height,
@@ -37,7 +44,9 @@ namespace DomainTests.Objects
                 pathCleanupWidth,
                 level,
                 minimumConnections,
-                maximumConnections);
+                maximumConnections,
+                mockWorldLogger.Object
+                );
         }
 
         [Test]
@@ -68,7 +77,6 @@ namespace DomainTests.Objects
         }
 
         [Test]
-        [Ignore("Need to fix test BUT also test CI/CD")]
         public void TestDeterminism()
         {
             WorldObject worldObjectUnderTest2 = new WorldObject(
@@ -83,7 +91,8 @@ namespace DomainTests.Objects
                 pathCleanupWidth,
                 level,
                 minimumConnections,
-                maximumConnections);
+                maximumConnections,
+                mockWorldLogger.Object);
 
             Assert.AreEqual(worldObjectUnderTest.map.Length, worldObjectUnderTest2.map.Length);
             for (int x = 0; x < worldObjectUnderTest.map.Length; x++)

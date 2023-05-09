@@ -1,4 +1,5 @@
 ﻿using CyFi.RootState;
+using Domain.Components;
 using Domain.Objects;
 
 namespace CyFi.Physics.Movement;
@@ -11,9 +12,11 @@ public class MovementSM : StateMachine
     public Falling Falling;
     public Jumping Jumping;
     public Digging Digging;
-    public GameObject GameObject { get; }
-    public WorldObject World { get; set; }
-    public IEnumerable<GameObject> CollidableObjects { get; set; }
+    public Stealing Stealing;
+    public ActivateRadar ActivateRadar;
+    public GameObject GameObject;
+    public WorldObject World;
+    public IEnumerable<GameObject> CollidableObjects;
     
     public MovementSM(GameObject gameObject)
     {
@@ -23,8 +26,10 @@ public class MovementSM : StateMachine
         Falling = new Falling(this);
         Jumping = new Jumping(this);
         Digging = new Digging(this);
+        Stealing = new Stealing(this);
+        ActivateRadar = new ActivateRadar(this);
         CollidableObjects = new List<GameObject>();
-    }
+    }    
 
     private List<GameObject>? GetCollidableObjects(CyFiState cyFiState)
     {

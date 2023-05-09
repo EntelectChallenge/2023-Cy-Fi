@@ -1,4 +1,4 @@
-# Entelect Challenge 2023 - Cy-Fi
+# Entelect Challenge 2023 - Cy-Fi - Release 2023.2.0
 
 The Entelect Challenge is an annual coding competition where students, professional developers, and enthusiasts develop an intelligent bot to play a game.
 
@@ -7,22 +7,8 @@ This year, the game is Cy-Fi 🪙!
 ---
 
 
->#### _NB_ - **Project is a work in progress** 🔧
->\
->The Entelect Challenge has undergone some restructuring this year.
+>#### Refer to GAMERULES.md FOR change log
 >
->We will be releasing the **full game** at the start, meaning no more periodic feature releases or last-minute changes (fingers crossed). This. is. it. 🔥
->
->We apologize that these changes have affected our timelines, resulting in us not being able to deliver everything we planned for this release. 😭😭😭
->
->Rather than delaying the release for a week, we have decided to open the project up to our AWESOME community (that's you!) to give you a head start. This way, you can catch a few bugs that we missed while building your bots, and we can patch our game while you all see what we have in store for you 🤭.
->
->Keep and eye on our [forum](http://forum.entelect.co.za/) for any incoming updates, patches, and bug fixes 🔜. There may be a shiny visualiser in your future!
->
->\
->As always thank you for your continued support and lovely feedback 😊
->
->\
 > Best regards and good luck!
 
 ---
@@ -67,8 +53,8 @@ In this project you will find everything we use to build a starter pack that you
 1. **2023-CyFi** - This base project contains the following files:
     * **engine** - The engine enforces the game's rules by applying the bot commands to the game state if they are valid.
     * **runner** - The runner runs matches between players, calling the appropriate commands as given by the bots and handing them to the engine to execute.
-    * **logger** (WIP 🔧) - The logger captures all changes to game state, as well as any exceptions, and writes them to a log file at the end of the game.
-4. **starter-bots** (WIP 🔧) - Starter bots with limited logic that can be used as a starting point for your bot. This folder also contains a bot called `ReferenceBot (Coming soon)`, which you can use to test your bot against!
+    * **logger** - The logger captures all changes to game state, as well as any exceptions, and writes them to a log file at the end of the game.
+4. **starter-bots** - Starter bots with limited logic that can be used as a starting point for your bot. This folder also contains a bot called `ReferenceBot (Coming soon)`, which you can use to test your bot against!
 
 This project can be used to get a better understanding of the rules and to help debug your bot.
 

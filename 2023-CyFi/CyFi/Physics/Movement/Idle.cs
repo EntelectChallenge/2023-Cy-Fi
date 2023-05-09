@@ -1,5 +1,6 @@
 ﻿using CyFi.Physics.Utils;
 using Domain.Enums;
+using Microsoft.Scripting.Runtime;
 
 namespace CyFi.Physics.Movement;
 
@@ -31,10 +32,12 @@ public class Idle : BaseState
             case InputCommand.UPRIGHT:
                 Movements.UpDecision(movementSm);
                 movementSm.GameObject.deltaY = 1;
+                movementSm.GameObject.deltaX = 1;
                 return;
             case InputCommand.UPLEFT:
                 Movements.UpDecision(movementSm);
                 movementSm.GameObject.deltaY = 1;
+                movementSm.GameObject.deltaX = -1;
                 return;
             case InputCommand.DOWNLEFT:
                 movementSm.GameObject.deltaX = -1;
@@ -49,6 +52,13 @@ public class Idle : BaseState
             case InputCommand.DIGLEFT:
                 Movements.DigDecision(movementSm, inputCommand);
                 return;
+            case InputCommand.STEAL:
+                Movements.StealDecision(movementSm);
+                return;
+            case InputCommand.RADAR:
+                Movements.RadarDecision(movementSm);
+                return;
+
         }
 
         movementSm.ChangeState(movementSm.Moving);

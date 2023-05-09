@@ -17,18 +17,21 @@ namespace CyFi.Runner
 
         public int X { get; set; }
         public int Y { get; set; }
+        //  public Dictionary<int,int> radarData { get; set; }
+        public string RadarData { get; set; }
 
         public BotStateDTO()
         {
 
         }
 
-        public BotStateDTO(Bot bot, HeroEntity hero, WorldObject world)
+        public BotStateDTO(Bot bot, List<Bot> opposingBots, HeroEntity hero, WorldObject world)
         {
             this.ConnectionId = bot.ConnectionId;
             this.CurrentLevel = bot.CurrentLevel;
             this.Collected = hero.Collected;
             this.ElapsedTime = hero.End.Subtract(hero.Start).ToString("g");
+            this.RadarData = string.Join(",", hero.radarData);
 
             X = hero.XPosition;
             Y = hero.YPosition;
@@ -47,9 +50,25 @@ namespace CyFi.Runner
                     if (xPos < 0 || yPos < 0 || xPos >= world.width || yPos >= world.height)
                     {
                         this.HeroWindow[x][y] = (int)ObjectType.Solid;
-                    } else
+                    }
+                    else
                     {
                         this.HeroWindow[x][y] = world.map[xPos][yPos];
+
+                        opposingBots.ForEach(oBot =>
+                        {
+                            if (oBot.Hero.XPosition == xPos && oBot.Hero.YPosition == yPos ||
+                                oBot.Hero.XPosition == xPos - 1 && oBot.Hero.YPosition == yPos ||
+                                oBot.Hero.XPosition == xPos && oBot.Hero.YPosition + 1 == yPos ||
+                                oBot.Hero.XPosition == xPos - 1 && oBot.Hero.YPosition + 1 == yPos)
+                            {
+                                if ((x > 0 && x < windowLength - 1) &&
+                                    (y > 0 && y < windowHeight - 1))
+                                {
+                                    this.HeroWindow[x][y] = (int)ObjectType.Opponent;
+                                }
+                            }
+                        });
                     }
                 }
             }

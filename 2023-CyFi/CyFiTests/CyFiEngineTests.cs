@@ -1,5 +1,6 @@
 ﻿using CyFi;
 using CyFi.Entity;
+using CyFi.Factories;
 using CyFi.Models;
 using CyFi.Runner;
 using Domain.Components;
@@ -22,7 +23,8 @@ namespace CyFiTests
     internal class CyFiEngineTests
     {
         IOptions<CyFiGameSettings> testSettings;
-        Mock<IHubContext<RunnerHub>> mockContext;
+        private Mock<IHubContext<RunnerHub>> mockContext;
+        Mock<WorldFactory> mockWorldFactory;
 
         CyFiEngine cyFiEngineUnderTest;
         Bot testBot;
@@ -47,7 +49,7 @@ namespace CyFiTests
             botCommandQueue = new Queue<BotCommand>();
 
             ILogger<CyFiEngine> engineNullLogger = new NullLogger<CyFiEngine>();
-            cyFiEngineUnderTest = new(testSettings, mockContext.Object, botCommandQueue, engineNullLogger, null);
+            cyFiEngineUnderTest = new(testSettings, mockContext.Object, botCommandQueue, engineNullLogger, null, mockWorldFactory.Object);
 
             ILogger<Bot> botNullLogger = new NullLogger<Bot>();
             testBot = new(testSettings.Value, botNullLogger, null, "123");

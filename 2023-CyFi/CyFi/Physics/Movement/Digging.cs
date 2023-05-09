@@ -14,7 +14,7 @@ namespace CyFi.Physics.Movement
         private MovementSM movementSm;
         public Digging(MovementSM stateMachine) : base("Digging", stateMachine)
         {
-            movementSm = stateMachine;
+            this.movementSm = stateMachine;
         }
 
         public override void UpdatePhysics()
@@ -22,7 +22,7 @@ namespace CyFi.Physics.Movement
             base.UpdatePhysics();
 
             // Dig and then move.
-            if (Movements.AttemptDig(movementSm))
+            if (Movements.AttemptDig(this.movementSm))
             {
                 if (typeof(HeroEntity).IsInstanceOfType(movementSm.GameObject))
                 {

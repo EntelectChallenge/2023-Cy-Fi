@@ -16,6 +16,14 @@ namespace CyFi.Models
         [JsonPropertyName("TickTimer")]
         [Range(1, 10000, ErrorMessage = "Value for {0} must be between {1} and {2} seconds.")]
         public int TickTimer { get; set; }
+
+        [JsonPropertyName("Max Ticks")]
+        [Range(1, 500000, ErrorMessage = "Value for {0} must be between {1} and {2} seconds.")]
+        public int MaxTicks { get; set; }
+
+        [JsonPropertyName("Collectables")]
+        [Range(1, 4, ErrorMessage = "Value for {0} must be between {1} and {2} seconds.")]
+        public int[] Collectables { get; set; }
     }
 
     public class Map
@@ -27,6 +35,6 @@ namespace CyFi.Models
         public int Height { get; set; }
 
         [JsonPropertyName("Seed")]
-        public string Seed { get; set; }
+        public int Seed { get; set; }
     }
 }

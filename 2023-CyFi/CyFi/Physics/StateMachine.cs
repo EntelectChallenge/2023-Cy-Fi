@@ -5,12 +5,12 @@ namespace CyFi.Physics;
 
 public class StateMachine
 {
-    public BaseState? currentState { get; set; }
+    public BaseState? CurrentState { get; set; }
     
     public void Start()
     {
-        currentState = GetInitialState();
-        currentState?.Enter();
+        CurrentState = GetInitialState();
+        CurrentState?.Enter();
     }
 
     protected virtual BaseState? GetInitialState()
@@ -21,25 +21,25 @@ public class StateMachine
     public void UpdateInput(InputCommand inputCommand)
     {
         Console.WriteLine("update input");
-        currentState?.UpdateInput(inputCommand);
+        CurrentState?.UpdateInput(inputCommand);
     }
 
     public void LateUpdate()
     {
         Console.WriteLine("update physics");
-        currentState?.UpdatePhysics();
+        CurrentState?.UpdatePhysics();
     }
 
     public void ChangeState(BaseState newState)
     {
-        currentState?.Exit();
+        CurrentState?.Exit();
         
-        currentState = newState;
-        currentState?.Enter();
+        CurrentState = newState;
+        CurrentState?.Enter();
     }
 
     public Type GetStateType()
     {
-        return currentState?.GetType();
+        return CurrentState?.GetType();
     }
 }

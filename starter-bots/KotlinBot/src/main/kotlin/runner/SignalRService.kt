@@ -83,9 +83,9 @@ object SignalRService {
                 ip = HOSTNAME
             }
             if (!ip.startsWith("http://")) {
-                ip = "http://$ip/runnerhub"
+                ip = "http://$ip:5000"
             }
-            return "$ip:5000"
+            return "$ip/runnerhub"
         }
     }
 }

@@ -1,20 +1,41 @@
 ﻿using Domain.Enums;
+using Logger;
+using Microsoft.Extensions.Logging;
 using System.Drawing;
-using Domain.Enums;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Domain.Objects
 {
     public class WorldObject
     {
+        private readonly IGameLogger<WorldObject> Logger;
+
         private readonly Random random;
 
         private readonly int pathWidthInt;
 
-        public int[][] map;
+        public int[][] map { get; set; }
 
-        public bool[][] pathMask;
+        private List<ChangeLogItem> changeLog;
+        public List<ChangeLogItem> ChangeLog
+        {
+            get
+            {
+                //  var changeLogTemp = changeLog;
+                //changeLog.Clear();
+                return changeLog;
 
-        public decimal totalPlatformLength;
+            }
+            set
+            {
+                changeLog = value;
+            }
+        }
+
+        private bool[][] pathMask;
+
+        private decimal totalPlatformLength;
 
         public readonly int width;
         public readonly int height;
@@ -36,6 +57,18 @@ namespace Domain.Objects
 
         public Point start;
 
+        public struct ChangeLogItem
+        {
+            public int pointX { get; set; }
+            public int pointY { get; set; }
+            public int tileType { get; set; }
+        }
+
+        public WorldObject(List<ChangeLogItem> changeLog)
+        {
+            this.ChangeLog = changeLog;
+        }
+
         public WorldObject(
             int width,
             int height,
@@ -48,9 +81,14 @@ namespace Domain.Objects
             float pathCleanupWidth,
             int level,
             int minConnections,
-            int maxConnections
+            int maxConnections,
+            ILogger<WorldObject> Logger
         )
         {
+
+            this.Logger = new GameLogger<WorldObject>(Logger);
+            this.ChangeLog = new List<ChangeLogItem>();
+
             pathMask = new bool[width][];
             this.width = width;
             this.height = height;
@@ -60,7 +98,7 @@ namespace Domain.Objects
             seed = seed is null ? (int)DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() : seed;
 
             // Set seed
-            random = new Random(seed.GetHashCode());
+            random = new Random(GetSeedFromObject(seed));
 
             // Initialize arrays
             map = new int[width][];
@@ -86,6 +124,19 @@ namespace Domain.Objects
             GenerateObjectsOnPath(level);
 
             GetStartingPoint(level);
+        }
+
+        /// <summary>
+        /// Converts an object into an integer seed for RNG.
+        /// </summary>
+        /// <param name="seedObj">The seed object.</param>
+        /// <returns>The 32 bit integer representation</returns>
+        private Int32 GetSeedFromObject(object seedObj)
+        {
+            string seedStr = seedObj.ToString() ?? string.Empty;
+            var algo = SHA1.Create();
+            var hash = BitConverter.ToInt32(algo.ComputeHash(Encoding.UTF8.GetBytes(seedStr)));
+            return hash;
         }
 
         /// <summary>
@@ -126,7 +177,7 @@ namespace Domain.Objects
                 int xPadding = (int)(width * 0.01);
                 int pathStartY = (path * pathHeight) + yPadding;
                 List<Tuple<int, int>> randomPath = new(); // Generate new path.
-                // Add some padding so paths aren't right on top of each other.
+                                                          // Add some padding so paths aren't right on top of each other.
                 int pathEndY = ((path + 1) * pathHeight) - yPadding;
 
                 // Random Y position within the slice.
@@ -321,11 +372,10 @@ namespace Domain.Objects
                         {
                             //Place Collectible 
                             //Check you are not placing the object on the ladders
+
+
                             if (
-                                 paths[i].Item2 == paths[i + 1].Item2 &&
-                                 paths[i].Item2 == paths[i - 1].Item2 &&
-                                 paths[i].Item1 != paths[i + 1].Item1 &&
-                                 paths[i].Item1 != paths[i - 1].Item1
+                                map[paths[i].Item1][paths[i].Item2] != (int)ObjectType.Ladder
                                  )
                             {
                                 map[paths[i].Item1][paths[i].Item2 + 1] = (int)ObjectType.Collectible;
@@ -674,10 +724,18 @@ namespace Domain.Objects
                 for (int y = bottomLeft.Y; y <= topRight.Y; y++)
                 {
                     if (map[x][y] == (int)ObjectType.Solid)
+                    {
                         map[x][y] = (int)ObjectType.Air;
+                        ChangeLog.Add(new ChangeLogItem { pointX = x, pointY = y, tileType = map[x][y] });
+                    }
                 }
             }
             return true;
+        }
+
+        public static void SaveSate(int[][] value)
+        {
+            Console.WriteLine("Value changed");
         }
     }
 }

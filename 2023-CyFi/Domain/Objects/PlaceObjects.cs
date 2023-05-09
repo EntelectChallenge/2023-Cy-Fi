@@ -12,13 +12,13 @@
             //Determine how many collectibles are needed based on the level and map size
             switch (Level)
             {
-                case 1:
+                case 0:
                     return MaxAmount * (PassingValue * 2) / 100;
-                case 2:
+                case 1:
                     return (int)(MaxAmount * (PassingValue * 1.7) / 100);
-                case 3:
+                case 2:
                     return (int)(MaxAmount * (PassingValue * 1.3) / 100);
-                case 4:
+                case 3:
                     return MaxAmount * (PassingValue * 1) / 100;
                 default:
                     Console.Write($"Level {Level} passed does not exist");
@@ -57,13 +57,13 @@
             //Determine how many hazards are needed based on the level
             switch (Level)
             {
-                case 1:
+                case 0:
                     return (int)Math.Floor(totalPlatformLength * 3 / 100);
-                case 2:
+                case 1:
                     return (int)Math.Floor(totalPlatformLength * 5 / 100);
-                case 3:
+                case 2:
                     return (int)Math.Floor(totalPlatformLength * 7 / 100);
-                case 4:
+                case 3:
                     return (int)Math.Floor(totalPlatformLength * 10 / 100);
                 default:
                     Console.Write($"Level {Level} passed does not exist");

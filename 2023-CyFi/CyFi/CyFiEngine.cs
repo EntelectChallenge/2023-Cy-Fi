@@ -3,6 +3,7 @@ using CyFi.Factories;
 using CyFi.Models;
 using CyFi.RootState;
 using CyFi.Runner;
+using Domain.Components;
 using Domain.Exceptions;
 using Domain.Models;
 using Domain.Objects;
@@ -16,6 +17,7 @@ using Microsoft.Python.Core;
 using System.Drawing;
 using System.Timers;
 using static CyFi.Settings.GameSettings;
+using Bot = CyFi.Entity.Bot;
 using Timer = System.Timers.Timer;
 
 namespace CyFi
@@ -40,24 +42,27 @@ namespace CyFi
         public CyFiEngine(
             IOptions<CyFiGameSettings> settings,
             IHubContext<RunnerHub> context,
-            Queue<BotCommand> CommandQueue, ILogger<CyFiEngine> Logger,
-            BotFactory botFactory)
+            Queue<BotCommand> CommandQueue,
+            ILogger<CyFiEngine> Logger,
+            BotFactory botFactory,
+            WorldFactory worldFactory
+            )
         {
             GameSettings = settings.Value;
 
             levels = new();
             for (int level = 0; level < GameSettings.Levels.Count; level++)
             {
-                levels.Add(WorldFactory.CreateWorld(GameSettings.Levels[level], level));
+                levels.Add(worldFactory.CreateWorld(GameSettings.Levels[level], level));
             }
 
             cyFiState = new CyFiState(
                 Levels: levels,
-                Bots: new List<Bot>()
+                Bots: new List<Bot>(),
+                Logger
             );
 
             this.CommandQueue = CommandQueue;
-
             this.Logger = new GameLogger<CyFiEngine>(Logger);
             this.BotFactory = botFactory;
 
@@ -71,15 +76,20 @@ namespace CyFi
             if (cyFiState.Bots.Count < GameSettings.NumberOfPlayers)
             {
                 Bot bot = BotFactory.CreateBot(nickName, connectionId);
-                this.cyFiState.Bots.Add(bot);
-                bot.CurrentLevel = 0;
                 Point startPosition = cyFiState.Levels[bot.CurrentLevel].start;
                 bot.Hero.XPosition = startPosition.X;
                 bot.Hero.YPosition = startPosition.Y;
                 bot.Hero.Start = DateTime.Now;
-
+                bot.CurrentLevel = 0;
                 // perhaps move this to somewhere else further down the line?
                 bot.Hero.MovementSm.World = cyFiState.Levels.First();
+
+                this.cyFiState.Bots.Add(bot);
+
+                if (cyFiState.Bots.Count == GameSettings.NumberOfPlayers)
+                {
+                    IGameLogger<CyFiState>.File(cyFiState, 0);
+                }
 
                 return bot.Id;
             }
@@ -96,6 +106,7 @@ namespace CyFi
                 await hubConnection.StartAsync();
             }
             SetTimer(GameSettings.TickTimer);
+
             if (cyFiState.Bots.Count >= GameSettings.NumberOfPlayers)
             {
                 try
@@ -117,11 +128,14 @@ namespace CyFi
             Logger.Log(LogLevel.Information, $"Tick: {cyFiState.Tick} ************************************************* ");
 
             List<BotStateDTO> botStates = new List<BotStateDTO>();
-
             foreach (var bot in cyFiState.Bots)
             {
-                botStates.Add(new BotStateDTO(bot, bot.Hero, cyFiState.Levels[bot.CurrentLevel]));
+
+                var oppositionBotsOnSameLevel = cyFiState.Bots.Except(new List<Bot> { bot }).Where(b => b.CurrentLevel == bot.CurrentLevel).ToList();
+
+                botStates.Add(new BotStateDTO(bot, oppositionBotsOnSameLevel, bot.Hero, cyFiState.Levels[bot.CurrentLevel]));
                 Logger.Log(LogLevel.Information, $"bot States: X {bot.Hero.XPosition}, Y {bot.Hero.YPosition}");
+
             }
 
             hubConnection.InvokeAsync("PublishBotStates", botStates);
@@ -149,7 +163,7 @@ namespace CyFi
 
                     Logger.Log(LogLevel.Information, $"Bot: {playerObject.Id} send command {playerAction.Action}");
 
-                    Console.WriteLine($"Current state of bot: {playerObject.Hero.MovementSm.currentState}");
+                    Console.WriteLine($"Current state of bot: {playerObject.Hero.MovementSm.CurrentState}");
 
                     // Update the bot based on the bot command and the movement state?
 
@@ -163,8 +177,11 @@ namespace CyFi
                         playerObject.Hero.Collected++;
                     }
 
+
                     int numOnLevel = cyFiState.Bots.Count((bot) => bot.CurrentLevel == playerObject.CurrentLevel);
-                    if (playerObject.Hero.Collected >= collectables[playerObject.CurrentLevel])
+
+
+                    if (playerObject.Hero.Collected >= GameSettings.Collectables[playerObject.CurrentLevel])
                     {
                         AdvanceToLevel(playerObject);
                         playerObject.Hero.Collected = 0;
@@ -175,39 +192,95 @@ namespace CyFi
             if (TickTimer.Enabled)
             {
                 cyFiState.Update();
+
                 cyFiState.Tick++;
                 CommandQueue.Clear();
+
+                //Format state
+                var state = new CyFiState()
+                {
+                    Tick = cyFiState.Tick,
+                    Bots = cyFiState.Bots
+                };
+
+                cyFiState.Levels.ForEach(level => state.Levels.Add(new WorldObject(level.ChangeLog)));
+
+                IGameLogger<CyFiState>.File(state, 1);
             }
         }
 
         public void AdvanceToLevel(Bot bot)
         {
-            bot.CurrentLevel++;
-            if (bot.CurrentLevel < GameSettings.Levels.Count)
-            {
+            if (bot.CurrentLevel < GameSettings.Levels.Count -1)
+            {                
+
+                bot.CurrentLevel++;
                 bot.TotalPoints += bot.Hero.Collected;
                 bot.Hero.Collected = 0;
                 Point startPosition = cyFiState.Levels[bot.CurrentLevel].start;
                 bot.Hero.XPosition = startPosition.X;
                 bot.Hero.YPosition = startPosition.Y;
 
+                //TallyPoints
+                foreach (Bot otherBot in cyFiState.Bots.Except(new[] { bot }))
+                {
+                    //Override to log change
+                    otherBot.TotalPoints += (5 * otherBot.Hero.Collected);
+                }
+                bot.TotalPoints += bot.Hero.Collected;
+
                 bot.Hero.MovementSm.World = cyFiState.Levels[bot.CurrentLevel];
+
             }
             else
             {
-                foreach (Bot otherBot in cyFiState.Bots.Except(new[] { bot }))
-                {
-                    otherBot.TotalPoints += otherBot.Hero.Collected;
-                }
-                bot.TotalPoints += bot.Hero.Collected;
+
+                TickTimer.Stop();
+                bot.TotalPoints += 20;
+                IGameLogger<CyFiState>.File(null, 2);
                 EndGame();
+            }
+
+            if (cyFiState.Tick > GameSettings.MaxTicks)
+            {
+                GracefulShutdown();
             }
         }
 
         private void EndGame()
         {
+
+            var rankedBots = cyFiState.Bots.OrderBy(bot => bot.TotalPoints);
+
+
+            var gameComplete = new GameComplete
+            {
+                TotalTicks = cyFiState.Tick,
+                Players = rankedBots.Select((bot, index) =>
+                    new PlayerResult
+                    {
+                        Placement = index + 1,
+                        Score = bot.TotalPoints,
+                        Id = bot.Id.ToString(),
+                        Nickname = bot.NickName,
+                        MatchPoints = (cyFiState.Bots.Count - (index + 1)) * 2
+                    }
+                ).ToList(),
+                WorldSeeds = GameSettings.Levels.Select(l => l.Seed).ToList(),
+                WinngingBot = rankedBots.First()
+            };
+
+
+            IGameLogger<GameComplete>.File(gameComplete, 5, "GameComplete");
             //Disconnect all bots
-            hubConnection.InvokeAsync("GameComplete");
+            hubConnection.InvokeAsync("GameComplete", gameComplete);
+        }
+
+        private void GracefulShutdown()
+        {
+            //TODO implement
+            //Disconnect all bots
+            hubConnection.InvokeAsync("EndGame");
             TickTimer.Stop();
             EndGame();
         }

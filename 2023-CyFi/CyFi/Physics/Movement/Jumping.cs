@@ -9,7 +9,7 @@ public class Jumping : BaseState
     private MovementSM movementSm;
 
     private int jumpHeight;
-    private int maxHeight = 2;
+    private int maxHeight = 3;
 
     public Jumping(MovementSM stateMachine) : base("Jumping", stateMachine)
     {

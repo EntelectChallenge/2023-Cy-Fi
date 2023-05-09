@@ -1,19 +1,18 @@
-﻿using System.Drawing;
-using CyFi.Physics.Utils;
-using Domain.Enums;
-using Domain.Objects;
+﻿using CyFi.Physics.Utils;
+using Domain.Components;
+using Domain.Models;
 
 namespace CyFi.Physics.Movement;
 
 public class Moving : BaseState
 {
     private MovementSM movementSm;
-    
+
     public Moving(MovementSM stateMachine) : base("Moving", stateMachine)
     {
         movementSm = stateMachine;
     }
-    
+
     public override void UpdatePhysics()
     {
         base.UpdatePhysics();
@@ -23,7 +22,7 @@ public class Moving : BaseState
         Console.WriteLine("Attempt to move");
         Movements.AttemptMove(movementSm);
         Movements.UpdateHeroPositions(movementSm);
-        
+
         // check if new position is falling and change the state
         if (Movements.ShouldStartFalling(movementSm))
         {

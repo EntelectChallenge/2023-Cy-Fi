@@ -4,7 +4,7 @@ namespace CyFi.Physics;
 
 public class BaseState
 {
-    public string name;
+    public string name { get; }
     protected StateMachine stateMachine;
 
     public BaseState(string name, StateMachine stateMachine)

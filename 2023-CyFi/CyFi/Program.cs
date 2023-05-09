@@ -65,6 +65,7 @@ namespace CyFi
                             services.AddSingleton<ICloudIntegrationService, CloudIntegrationService>();
                             services.AddSingleton<Queue<BotCommand>>();
                             services.AddSingleton<CyFiEngine>();
+                            services.AddSingleton<WorldFactory>();
                             services.AddSignalR(service =>
                             {
                                 service.EnableDetailedErrors = true;

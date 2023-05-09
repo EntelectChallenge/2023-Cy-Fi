@@ -6,34 +6,47 @@ namespace CyFi.Entity
 {
     public class Bot
     {
-        public HeroEntity Hero;
+        public HeroEntity Hero { get; set; }
 
-        public int CurrentLevel;
+        private int _currentLevel;
+
+        public int CurrentLevel
+        {
+            get
+            {
+                return _currentLevel;
+            }
+            set
+            {
+                _currentLevel = value;
+            }
+        }
 
         public IGameLogger<Bot> Logger;
 
-        public Guid Id;
+        public Guid Id { get; set; }
 
-        public string NickName;
+        public string NickName { get; set; }
 
-        public string ConnectionId;
+        public string ConnectionId { get; set; }
 
         public DateTime LastUpdated;
+
 
         public int TotalPoints { get; set; }
 
         //Needed for SignalR unit test
-        public Bot()
-        {
-        }
+        public Bot() { }
 
-        public Bot(CyFiGameSettings settings, ILogger<Bot> logger, string? nickName, string connectionId)
+
+        public Bot(CyFiGameSettings settings, ILogger<Bot> logger, string? nickName, string connectionId, Guid? id = null)
         {
-            Id = Guid.NewGuid();
+            Id = id ?? Guid.NewGuid();
             Logger = new GameLogger<Bot>(logger);
-            Hero = new HeroEntity(settings);
-            NickName = nickName ?? "BotTheBuilder";
+            Hero = new HeroEntity(Id, settings);
+            NickName = nickName ?? Id.ToString();
             ConnectionId = connectionId;
         }
+
     }
 }

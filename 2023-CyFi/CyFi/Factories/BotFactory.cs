@@ -10,7 +10,8 @@ namespace CyFi.Factories
         public CyFiGameSettings gameSettings;
         public ILoggerFactory loggerFactory;
 
-        public BotFactory(IOptions<CyFiGameSettings> gameSettings, ILoggerFactory loggerFactory) 
+        public BotFactory(IOptions<CyFiGameSettings> gameSettings, 
+            ILoggerFactory loggerFactory) 
         {
             this.gameSettings = gameSettings.Value;
             this.loggerFactory = loggerFactory;

@@ -17,7 +17,7 @@ namespace Logger
             logger.Log(level, exp, message, args);
         }
 
-        public void Console(LogLevel level, string? message, Exception? exp = null, object?[]? args = null)
+        public void ConsoleL(LogLevel level, string? message, Exception? exp = null, object?[]? args = null)
         {
             using (LogContext.PushProperty("ConsoleOnly", value: true))
             {
