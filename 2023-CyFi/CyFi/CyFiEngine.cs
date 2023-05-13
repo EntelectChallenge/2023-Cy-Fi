@@ -120,13 +120,8 @@ namespace CyFi
             }
         }
 
-
-        private void GameLoop()
-        {
-            //Send updated bot state
-
-            Logger.Log(LogLevel.Information, $"Tick: {cyFiState.Tick} ************************************************* ");
-
+		private void PublishBotStates()
+		{
             List<BotStateDTO> botStates = new List<BotStateDTO>();
             foreach (var bot in cyFiState.Bots)
             {
@@ -139,6 +134,14 @@ namespace CyFi
             }
 
             hubConnection.InvokeAsync("PublishBotStates", botStates);
+		}
+
+
+        private void GameLoop()
+        {
+            //Send updated bot state
+
+            Logger.Log(LogLevel.Information, $"Tick: {cyFiState.Tick} ************************************************* ");
 
             Bot? playerObject = null;
 
@@ -196,7 +199,10 @@ namespace CyFi
                 cyFiState.Tick++;
                 CommandQueue.Clear();
 
-                //Format state
+				// publish the updated bot states
+				PublishBotStates();
+
+                // format state and write it to log file
                 var state = new CyFiState()
                 {
                     Tick = cyFiState.Tick,
@@ -206,7 +212,9 @@ namespace CyFi
                 cyFiState.Levels.ForEach(level => state.Levels.Add(new WorldObject(level.ChangeLog)));
 
                 IGameLogger<CyFiState>.File(state, 1);
+
             }
+
         }
 
         public void AdvanceToLevel(Bot bot)
