@@ -7,6 +7,7 @@ namespace CyFi.Runner
     public class BotStateDTO
     {
         public int CurrentLevel { get; set; }
+        public string CurrentState { get; set; }
         public string ConnectionId { get; set; }
 
         public int Collected { get; set; }
@@ -29,6 +30,7 @@ namespace CyFi.Runner
         {
             this.ConnectionId = bot.ConnectionId;
             this.CurrentLevel = bot.CurrentLevel;
+            this.CurrentState = hero.MovementSm.CurrentState.name;
             this.Collected = hero.Collected;
             this.ElapsedTime = hero.End.Subtract(hero.Start).ToString("g");
             this.RadarData = string.Join(",", hero.radarData);
