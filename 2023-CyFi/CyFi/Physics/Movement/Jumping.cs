@@ -64,10 +64,13 @@ public class Jumping : BaseState
         {
             movementSm.ChangeState(movementSm.Idle);
             jumpHeight = 0;
+            movementSm.GameObject.deltaX = 0;
+            movementSm.GameObject.deltaY = 0;
             return;
         }
-        
+
         jumpHeight++;
         Movements.UpdateHeroPositions(movementSm);
+		movementSm.GameObject.deltaX = 0;
     }
 }

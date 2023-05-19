@@ -62,6 +62,7 @@ public class Falling : BaseState
         else
         {
             movementSm.GameObject.deltaY = 0;
+            movementSm.GameObject.deltaX = 0;
             movementSm.ChangeState(movementSm.Idle);
         }
     }
