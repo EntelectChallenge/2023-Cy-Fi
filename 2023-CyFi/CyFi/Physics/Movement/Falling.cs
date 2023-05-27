@@ -37,6 +37,8 @@ public class Falling : BaseState
             case InputCommand.DIGDOWN:
             case InputCommand.DIGLEFT:
             case InputCommand.DIGRIGHT:
+            case InputCommand.STEAL:
+            case InputCommand.RADAR:
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(inputCommand), inputCommand, null);
