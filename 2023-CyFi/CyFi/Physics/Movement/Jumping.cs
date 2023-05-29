@@ -64,7 +64,7 @@ public class Jumping : BaseState
         var successfulMove = Movements.AttemptMove(movementSm);
         if (!successfulMove || maxHeightReached)
         {
-            movementSm.ChangeState(movementSm.Idle);
+            movementSm.ChangeState(movementSm.Falling);
             jumpHeight = 0;
             return;
         }
