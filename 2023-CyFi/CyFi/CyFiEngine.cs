@@ -123,8 +123,12 @@ namespace CyFi
 
         private void GameLoop()
         {
-            //Send updated bot state
+            if (cyFiState.Tick >= GameSettings.MaxTicks)
+            {
+                GracefulShutdown();
+            }
 
+            //Send updated bot state
             Logger.Log(LogLevel.Information, $"Tick: {cyFiState.Tick} ************************************************* ");
 
             List<BotStateDTO> botStates = new List<BotStateDTO>();
@@ -239,11 +243,6 @@ namespace CyFi
                 bot.TotalPoints += 20;
                 IGameLogger<CyFiState>.File(null, 2);
                 EndGame();
-            }
-
-            if (cyFiState.Tick > GameSettings.MaxTicks)
-            {
-                GracefulShutdown();
             }
         }
 
