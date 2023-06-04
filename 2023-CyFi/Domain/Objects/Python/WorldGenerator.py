@@ -26,7 +26,33 @@ width = 500
 height = 200
 
 mapPlot = fig.add_subplot(gs[0:, 0])
-worldGenerator = WorldObject(width, height, 'seed', 50, 0.025, 0.115, 0.065, 0.13, 0.005, 1, 6, 9)
+
+'''worldGenerator = WorldObject(width, 
+height, 
+'seed', 
+50, 
+0.025, 
+0.115, 
+0.065, # Min Height
+0.13,  # Max Height
+0.005, 
+1, 
+6, 
+9)'''
+
+worldGenerator = WorldObject(
+	width, 
+	height, 
+	493048330493, 
+	50, 
+	0.025, 
+	0.115,  
+	0.065, # Min Height
+	0.13,  # Max Height
+	0.005, 
+	1, 
+	6, 
+	9)
 
 worldMap = np.array(worldGenerator.map)
 
@@ -50,7 +76,24 @@ mapPlot.imshow(worldMap.T, extent=(0, width, 0, height), origin="lower", cmap=Li
 #=== === === === === === === ===	World Generation	=== === === === === === === ===
 def generate(value):
 
-	newWorld = WorldObject(width_slider.val, height_slider.val, seed_input.text, fill_slider.val, path_width_slider.val[0]/100, path_width_slider.val[1]/100, path_height_slider.val[0]/100, path_height_slider.val[1]/100, path_cleanup_width_slider.val/100, lod_slider.val, connections_slider.val[0], connections_slider.val[1])
+	#newWorld = WorldObject(width_slider.val, height_slider.val, seed_input.text, fill_slider.val, path_width_slider.val[0]/100, path_width_slider.val[1]/100, path_height_slider.val[0]/100, path_height_slider.val[1]/100, path_cleanup_width_slider.val/100, lod_slider.val, connections_slider.val[0], connections_slider.val[1])
+	
+	newWorld = WorldObject(
+		width_slider.val, 
+		height_slider.val, 
+		seed_input.text, 
+		fill_slider.val, 
+		path_width_slider.val[0]/100, 
+		path_width_slider.val[1]/100, 
+		 0.032, # Min height
+		 0.2, # Max height
+		path_cleanup_width_slider.val/100, 
+		lod_slider.val, 
+		connections_slider.val[0], 
+		connections_slider.val[1])
+	
+	
+
 	mapPlot.cla()
 
 	linewidth = 450*pow(width_slider.val, -0.999)
@@ -98,7 +141,7 @@ fill_slider.on_changed(generate)
 path_cleanup_width_slider = Slider(ax=fig.add_subplot(gs[4,1]), label='Path cleanup width percentage', valmin=0, valmax=100, valinit=1, valstep=0.5)
 path_cleanup_width_slider.on_changed(generate)
 
-lod_slider = Slider(ax=fig.add_subplot(gs[7,1]), label='Level', valmin=1, valmax=4, valinit=1, valstep=1)
+lod_slider = Slider(ax=fig.add_subplot(gs[7,1]), label='Level', valmin=0, valmax=3, valinit=0, valstep=1)
 lod_slider.on_changed(generate)
 
 # === === ===		Text Box				===	=== ===

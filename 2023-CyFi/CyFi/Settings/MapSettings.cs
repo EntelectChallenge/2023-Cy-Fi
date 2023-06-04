@@ -6,8 +6,8 @@
         public const int fillThreshold = 50;
         public const float minPathWidth = 0.025f;
         public const float maxPathWidth = 0.115f;
-        public const float minPathHeight = 0.065f;
-        public const float maxPathHeight = 0.13f;
+        public static readonly float[] minPathHeight = { 0.065f, 0.065f, 0.065f, 0.032f };
+        public static readonly float[] maxPathHeight = { 0.13f, 0.065f, 0.065f, 0.2f };
         public const float pathCleanupWidth = 0.015f;
         public const int minConnections = 6;
         public const int maxConnections = 9;

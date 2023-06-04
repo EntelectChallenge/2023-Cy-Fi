@@ -1,4 +1,4 @@
-# Entelect Challenge 2023: Cy-Fi 🏆 Release 2023.2.0
+# Entelect Challenge 2023: Cy-Fi 🏆 Release 2023.2.1
 
 ---
 >### _NB:_ Change log 
@@ -74,7 +74,7 @@ The number of `Collectibles` available in each level decreases.
 
 When a player collects a `Collectible`, it is removed from the world and is no longer available to the other heroes.
 
-Heroes can `Steal` `Collectibles` from other heroes (WIP 🔧). The amount of `Collectibles` a hero can steal is proportional to the number of collectibles the target hero has. Heroes with more `Collectibles` cannot `Steal` from heroes with fewer `Collectibles` - try and go for the heroes with the most!
+Heroes can `Steal` `Collectibles` from other heroes. The amount of `Collectibles` a hero can steal is proportional to the number of collectibles the target hero has. Heroes with more `Collectibles` cannot `Steal` from heroes with fewer `Collectibles` - try and go for the heroes with the most!
 
 Heroes can also `Dig` through the terrainto receive a `Collectible` after digging a certain number of tiles.
 
@@ -89,7 +89,7 @@ Cy-Fi is a real time game that utilises `Ticks`, a unit in time to keep track of
 
 ## Heroes
 
-Four Heroes (`bots`) will be placed into the map together, and have to race to finish the game! Acquiring `Collectibles` will get you to the next `Level`. `Stealing`(WIP 🔧) is legal!
+Four Heroes (`bots`) will be placed into the map together, and have to race to finish the game! Acquiring `Collectibles` will get you to the next `Level`. `Stealing` is legal!
 
 ## The Map
 

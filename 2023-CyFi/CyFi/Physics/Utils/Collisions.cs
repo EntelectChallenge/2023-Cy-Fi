@@ -72,7 +72,7 @@ public static class Collisions
         return test;
     }
 
-    public static bool OnlyAirBelow(GameObject gameObject, WorldObject world)
+    public static bool OnlyAirIrCollectableBelow(GameObject gameObject, WorldObject world)
     {
         var aboveMapBottomEdge = gameObject.YPosition > 0;
         if (!aboveMapBottomEdge) return false;
@@ -80,12 +80,13 @@ public static class Collisions
         var bottomRow = gameObject.BoundingBox()
             .Where(pos => pos.Y == gameObject.YPosition);
 
-        var onlyAirBelow = bottomRow.All(pos => world.map[pos.X][pos.Y - 1] == (int)ObjectType.Air);
+        var onlyAirOrCoolectableBelow = bottomRow.All(pos => 
+        (world.map[pos.X][pos.Y - 1] == (int)ObjectType.Air) || (world.map[pos.X][pos.Y - 1] == (int)ObjectType.Collectible));
 
-        Console.Write($"{onlyAirBelow}");
+        Console.Write($"{onlyAirOrCoolectableBelow}");
 
 
-        return onlyAirBelow;
+        return onlyAirOrCoolectableBelow;
     }
 
     public static bool HazardsBelow(GameObject gameObject, WorldObject world)

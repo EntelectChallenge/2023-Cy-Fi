@@ -37,6 +37,8 @@ public class Falling : BaseState
             case InputCommand.DIGDOWN:
             case InputCommand.DIGLEFT:
             case InputCommand.DIGRIGHT:
+            case InputCommand.STEAL:
+            case InputCommand.RADAR:
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(inputCommand), inputCommand, null);
@@ -48,7 +50,7 @@ public class Falling : BaseState
         base.UpdatePhysics();
         movementSm.GameObject.deltaY = -1;
 
-        var onlyAir = Collisions.OnlyAirBelow(movementSm.GameObject, movementSm.World);
+        var onlyAir = Collisions.OnlyAirIrCollectableBelow(movementSm.GameObject, movementSm.World);
         var noCollisions = Collisions.NoHeroCollision(movementSm.GameObject, movementSm.CollidableObjects);
         var attemptMove = Movements.AttemptMove(movementSm);
 

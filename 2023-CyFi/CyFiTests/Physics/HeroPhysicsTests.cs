@@ -135,6 +135,43 @@ namespace CyFiTests.Physics
         }
 
         [Test]
+        public void GivenFallingHeroOntoCollectible_UpdatePositionAccordingly()
+        {
+            testWorld.map = new int[2][];
+
+            testWorld.map[0] = new int[6] { (int)ObjectType.Air, (int)ObjectType.Solid, (int)ObjectType.Collectible, (int)ObjectType.Air, (int)ObjectType.Air, (int)ObjectType.Air };
+            testWorld.map[1] = new int[6] { (int)ObjectType.Air, (int)ObjectType.Air, (int)ObjectType.Collectible, (int)ObjectType.Air, (int)ObjectType.Air, (int)ObjectType.Air };
+
+            heroEntity.XPosition = 0;
+            heroEntity.YPosition = 4;
+
+            //    start
+            //      v  
+            // [ X ][ X ]
+            // [ X ][ X ]
+            // [ 1 ][ 1 ] < air
+            // [ 1 ][ 1 ] < air
+            // [ 2 ][ 1 ] < air
+            // [ 1 ][ 1 ]
+            //   ^    ^  
+            //  air  air
+
+            Assert.IsTrue(heroEntity.MovementSm.GetStateType() == typeof(Idle));
+            Assert.AreEqual(4, heroEntity.YPosition);
+            Assert.AreEqual(0, heroEntity.XPosition);
+
+            heroPhysicsUnderTest.Update(heroEntity, otherPlayers, testWorld);
+            Assert.IsTrue(heroEntity.MovementSm.GetStateType() == typeof(Falling));
+            Assert.AreEqual(3, heroEntity.YPosition);
+            Assert.AreEqual(0, heroEntity.XPosition);
+
+            heroPhysicsUnderTest.Update(heroEntity, otherPlayers, testWorld);
+            // Assert.IsFalse(heroEntity.MovementSm.GetStateType() == typeof(Falling));
+            Assert.AreEqual(2, heroEntity.YPosition);
+            Assert.AreEqual(0, heroEntity.XPosition);
+        }
+
+        [Test]
         public void GivenClimbingHero_UpdatePositionAccordingly()
         {
             testWorld.map = new int[2][];

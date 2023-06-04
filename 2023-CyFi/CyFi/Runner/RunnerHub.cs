@@ -134,7 +134,7 @@ namespace CyFi.Runner
                 return;
             }
 
-            //Check if bot has already sent a command within the given tick
+            //Check if bot has already had a command lined up on the queue
             if (!engine.HasBotMoved(command))
             {
                 engine.CommandQueue.Enqueue(command);

@@ -120,25 +120,29 @@ namespace CyFi
             }
         }
 
-
-        private void GameLoop()
+        private void PublishBotStates()
         {
-            //Send updated bot state
-
-            Logger.Log(LogLevel.Information, $"Tick: {cyFiState.Tick} ************************************************* ");
-
             List<BotStateDTO> botStates = new List<BotStateDTO>();
             foreach (var bot in cyFiState.Bots)
             {
 
                 var oppositionBotsOnSameLevel = cyFiState.Bots.Except(new List<Bot> { bot }).Where(b => b.CurrentLevel == bot.CurrentLevel).ToList();
 
-                botStates.Add(new BotStateDTO(bot, oppositionBotsOnSameLevel, bot.Hero, cyFiState.Levels[bot.CurrentLevel]));
+                botStates.Add(new BotStateDTO(bot, oppositionBotsOnSameLevel, bot.Hero, cyFiState.Levels[bot.CurrentLevel], cyFiState.Tick));
                 Logger.Log(LogLevel.Information, $"bot States: X {bot.Hero.XPosition}, Y {bot.Hero.YPosition}");
 
             }
 
             hubConnection.InvokeAsync("PublishBotStates", botStates);
+
+        }
+
+
+        private void GameLoop()
+        {
+            //Send updated bot state
+
+            Logger.Log(LogLevel.Information, $"Tick: {cyFiState.Tick} ************************************************* ");
 
             Bot? playerObject = null;
 
@@ -151,6 +155,13 @@ namespace CyFi
 
                     // Get the bot it belongs too
                     playerObject = cyFiState.Bots.FirstOrDefault((bot) => bot.Id.Equals(playerAction.BotId));
+
+                    if (playerObject.Hero.Collected >= GameSettings.Collectables[playerObject.CurrentLevel])
+                    {
+                        AdvanceToLevel(playerObject);
+                        playerObject.Hero.Collected = 0;
+                        return;
+                    }
 
                     // If there is not bot, continue
                     if (playerObject == null)
@@ -167,10 +178,12 @@ namespace CyFi
 
                     // Update the bot based on the bot command and the movement state?
 
+                    Logger.Log(LogLevel.Information, $"Bot {playerObject.Id}: command updated {playerAction.Action.ToString()}");
                     playerObject.Hero.UpdateInput(
                         playerAction
                     );
 
+                    // Update collectible 
                     if (playerObject.Hero.TimesDug >= collectibleDigCount)
                     {
                         playerObject.Hero.TimesDug = 0;
@@ -179,13 +192,6 @@ namespace CyFi
 
 
                     int numOnLevel = cyFiState.Bots.Count((bot) => bot.CurrentLevel == playerObject.CurrentLevel);
-
-
-                    if (playerObject.Hero.Collected >= GameSettings.Collectables[playerObject.CurrentLevel])
-                    {
-                        AdvanceToLevel(playerObject);
-                        playerObject.Hero.Collected = 0;
-                    }
                 }
             }
 
@@ -194,7 +200,8 @@ namespace CyFi
                 cyFiState.Update();
 
                 cyFiState.Tick++;
-                CommandQueue.Clear();
+
+                PublishBotStates();
 
                 //Format state
                 var state = new CyFiState()
@@ -207,12 +214,30 @@ namespace CyFi
 
                 IGameLogger<CyFiState>.File(state, 1);
             }
+
+            if (cyFiState.Tick > GameSettings.MaxTicks)
+            {
+                GracefulShutdown();
+            }
         }
 
         public void AdvanceToLevel(Bot bot)
         {
-            if (bot.CurrentLevel < GameSettings.Levels.Count -1)
-            {                
+            if (bot.CurrentLevel < GameSettings.Levels.Count - 1)
+            {
+                for (int i = 0; i < CommandQueue.Count; i ++)
+                {
+                    BotCommand command;
+                    var canDequeue = CommandQueue.TryDequeue(out command);
+
+                    if (canDequeue)
+                    {
+                        if (command.BotId != bot.Id)
+                        {
+                            CommandQueue.Enqueue(command);
+                        }
+                    }
+                }
 
                 bot.CurrentLevel++;
                 bot.TotalPoints += bot.Hero.Collected;
@@ -230,28 +255,21 @@ namespace CyFi
                 bot.TotalPoints += bot.Hero.Collected;
 
                 bot.Hero.MovementSm.World = cyFiState.Levels[bot.CurrentLevel];
-
             }
             else
             {
-
                 TickTimer.Stop();
                 bot.TotalPoints += 20;
-                IGameLogger<CyFiState>.File(null, 2);
                 EndGame();
-            }
-
-            if (cyFiState.Tick > GameSettings.MaxTicks)
-            {
-                GracefulShutdown();
             }
         }
 
         private void EndGame()
         {
+            Console.WriteLine("Game complete :)");
+            IGameLogger<CyFiState>.File(null, 2);
 
             var rankedBots = cyFiState.Bots.OrderBy(bot => bot.TotalPoints);
-
 
             var gameComplete = new GameComplete
             {
@@ -278,10 +296,9 @@ namespace CyFi
 
         private void GracefulShutdown()
         {
-            //TODO implement
             //Disconnect all bots
-            hubConnection.InvokeAsync("EndGame");
             TickTimer.Stop();
+            Console.WriteLine("Timer ran out :(");
             EndGame();
         }
 
