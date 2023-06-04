@@ -50,7 +50,7 @@ public static class Movements
 
         Console.WriteLine($"World LEVEL: {movementSm.World.level}");
 
-        return Collisions.OnlyAirBelow(movementSm.GameObject, movementSm.World);
+        return Collisions.OnlyAirIrCollectableBelow(movementSm.GameObject, movementSm.World);
     }
 
     public static void UpDecision(MovementSM movementSm)
@@ -61,7 +61,7 @@ public static class Movements
         //   var onGround = movementSm.GameObject.BelowBoundingBox().Any(point => movementSm.World.map[point.X][point.Y] != (int)ObjectType.Air);
 
         var test = movementSm.GetStateType;
-        if (Collisions.OnlyAirBelow(movementSm.GameObject, movementSm.World))
+        if (Collisions.OnlyAirIrCollectableBelow(movementSm.GameObject, movementSm.World))
         {
             Console.WriteLine("Not on surface");
             return;

@@ -44,9 +44,7 @@ namespace DomainTests.Objects
                 pathCleanupWidth,
                 level,
                 minimumConnections,
-                maximumConnections,
-                mockWorldLogger.Object
-                );
+                maximumConnections);
         }
 
         [Test]
@@ -91,8 +89,7 @@ namespace DomainTests.Objects
                 pathCleanupWidth,
                 level,
                 minimumConnections,
-                maximumConnections,
-                mockWorldLogger.Object);
+                maximumConnections);
 
             Assert.AreEqual(worldObjectUnderTest.map.Length, worldObjectUnderTest2.map.Length);
             for (int x = 0; x < worldObjectUnderTest.map.Length; x++)

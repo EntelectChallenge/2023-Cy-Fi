@@ -58,13 +58,13 @@
             switch (Level)
             {
                 case 0:
-                    return (int)Math.Floor(totalPlatformLength * 3 / 100);
-                case 1:
                     return (int)Math.Floor(totalPlatformLength * 5 / 100);
-                case 2:
-                    return (int)Math.Floor(totalPlatformLength * 7 / 100);
-                case 3:
+                case 1:
                     return (int)Math.Floor(totalPlatformLength * 10 / 100);
+                case 2:
+                    return (int)Math.Floor(totalPlatformLength * 20 / 100);
+                case 3:
+                    return (int)Math.Floor(totalPlatformLength * 15/ 100);
                 default:
                     Console.Write($"Level {Level} passed does not exist");
                     throw new Exception("Level cannot be determined");

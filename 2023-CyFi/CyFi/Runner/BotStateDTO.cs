@@ -7,11 +7,13 @@ namespace CyFi.Runner
     public class BotStateDTO
     {
         public int CurrentLevel { get; set; }
+        public string CurrentState { get; set; }
         public string ConnectionId { get; set; }
 
         public int Collected { get; set; }
 
         public string ElapsedTime { get; set; }
+        public int GameTick { get; set; }
 
         public int[][] HeroWindow { get; set; }
 
@@ -25,13 +27,15 @@ namespace CyFi.Runner
 
         }
 
-        public BotStateDTO(Bot bot, List<Bot> opposingBots, HeroEntity hero, WorldObject world)
+        public BotStateDTO(Bot bot, List<Bot> opposingBots, HeroEntity hero, WorldObject world, int gameTick)
         {
             this.ConnectionId = bot.ConnectionId;
             this.CurrentLevel = bot.CurrentLevel;
+            this.CurrentState = hero.MovementSm.CurrentState.name;
             this.Collected = hero.Collected;
             this.ElapsedTime = hero.End.Subtract(hero.Start).ToString("g");
             this.RadarData = string.Join(",", hero.radarData);
+            this.GameTick = gameTick;
 
             X = hero.XPosition;
             Y = hero.YPosition;

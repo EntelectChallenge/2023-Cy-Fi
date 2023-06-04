@@ -1,7 +1,7 @@
 ﻿using Domain.Enums;
 using Logger;
-using Microsoft.Extensions.Logging;
 using System.Drawing;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -81,12 +81,9 @@ namespace Domain.Objects
             float pathCleanupWidth,
             int level,
             int minConnections,
-            int maxConnections,
-            ILogger<WorldObject> Logger
+            int maxConnections
         )
-        {
-
-            this.Logger = new GameLogger<WorldObject>(Logger);
+        {           
             this.ChangeLog = new List<ChangeLogItem>();
 
             pathMask = new bool[width][];
@@ -175,10 +172,13 @@ namespace Domain.Objects
 
                 int yPadding = (int)(pathHeight * 0.05);
                 int xPadding = (int)(width * 0.01);
-                int pathStartY = (path * pathHeight) + yPadding;
+
+                int pathStartY = (path * pathHeight) + yPadding + 8;
+                int pathEndY = ((path + 1) * pathHeight) - yPadding;
+
                 List<Tuple<int, int>> randomPath = new(); // Generate new path.
                                                           // Add some padding so paths aren't right on top of each other.
-                int pathEndY = ((path + 1) * pathHeight) - yPadding;
+              
 
                 // Random Y position within the slice.
                 int startY = random.Next(pathStartY, pathEndY);
@@ -378,7 +378,7 @@ namespace Domain.Objects
                                 map[paths[i].Item1][paths[i].Item2] != (int)ObjectType.Ladder
                                  )
                             {
-                                map[paths[i].Item1][paths[i].Item2 + 1] = (int)ObjectType.Collectible;
+                                map[paths[i].Item1][paths[i].Item2 + 2] = (int)ObjectType.Collectible;
                                 totalCollectablesAmountPlaced += 1;
                             }
                         }
@@ -689,6 +689,13 @@ namespace Domain.Objects
             }
 
             Tuple<int, int> startingPoint = randomPaths.SelectMany(p => p).OrderBy(pathPoint => Math.Pow(location.X - pathPoint.Item1, 2) + Math.Pow(location.Y - pathPoint.Item2, 2)).First();
+
+            if (map[startingPoint.Item1][startingPoint.Item2] == (int)ObjectType.Hazard ||
+                map[startingPoint.Item1 + 1][startingPoint.Item2] == (int)ObjectType.Hazard)
+            {
+                map[startingPoint.Item1][startingPoint.Item2] = (int)ObjectType.Platform;
+                map[startingPoint.Item1 + 1][startingPoint.Item2] = (int)ObjectType.Platform;
+            }
 
             start = new(startingPoint.Item1, startingPoint.Item2 + 1);
 
