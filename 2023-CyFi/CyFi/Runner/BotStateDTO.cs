@@ -20,7 +20,7 @@ namespace CyFi.Runner
         public int X { get; set; }
         public int Y { get; set; }
         //  public Dictionary<int,int> radarData { get; set; }
-        public string RadarData { get; set; }
+        public int[][] RadarData { get; set; }
 
         public BotStateDTO()
         {
@@ -34,11 +34,20 @@ namespace CyFi.Runner
             this.CurrentState = hero.MovementSm.CurrentState.name;
             this.Collected = hero.Collected;
             this.ElapsedTime = hero.End.Subtract(hero.Start).ToString("g");
-            this.RadarData = string.Join(",", hero.radarData);
             this.GameTick = gameTick;
 
             X = hero.XPosition;
             Y = hero.YPosition;
+
+            int radarPings = hero.radarData.Count;
+            int radarValueCount = 2;
+            this.RadarData = new int[radarPings][];
+            for (int i = 0; i < radarPings; i++)
+            {
+                this.RadarData[i] = new int[radarValueCount];
+                this.RadarData[i][0] = hero.radarData[i].DirectionFromOpponent;
+                this.RadarData[i][1] = hero.radarData[i].PercentageDistance;
+            }
 
             var coordinates = hero.HeroWindow();
             int windowLength = Math.Abs(coordinates[1].X - coordinates[0].X);
