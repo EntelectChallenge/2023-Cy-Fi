@@ -72,12 +72,13 @@ namespace CyFi.Runner
         /// <param name="gameObject"></param>
         /// <returns></returns>
         /// 
-        public async Task PublishBotStates(List<BotStateDTO> botStates)
+        public async Task<bool> PublishBotStates(List<BotStateDTO> botStates)
         {
             foreach (var botState in botStates)
             {
                 await Clients.Client(botState.ConnectionId).SendAsync("ReceiveBotState", botState);
             }
+            return true;
         }
 
         /// <summary>
