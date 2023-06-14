@@ -45,6 +45,7 @@ namespace CyFi
         private string cloudSeed;
 
         public ICloudIntegrationService cloudIntegrationService;
+        private bool _isInLoop = false;
 
         public CyFiEngine(
             IOptions<CyFiGameSettings> settings,
@@ -154,7 +155,8 @@ namespace CyFi
 
             }
 
-            hubConnection.InvokeAsync("PublishBotStates", botStates);
+            //this will ensure that it only completes the loop once all bots state has been sent
+            bool published = hubConnection.InvokeAsync<bool>("PublishBotStates", botStates).Result;
 
         }
 
@@ -318,10 +320,17 @@ namespace CyFi
             TickTimer.AutoReset = true;
         }
 
+
+        // the _isInLoop will stop the gameLoop from running at the same time
         private void OnTimedEvent(object? sender, ElapsedEventArgs e)
         {
-            Console.WriteLine("The Elapsed event was raised at {0}", e.SignalTime);
-            GameLoop();
+            if (!_isInLoop)
+            {
+                _isInLoop = true;
+                Console.WriteLine("The Elapsed event was raised at {0}", e.SignalTime);
+                GameLoop();
+                _isInLoop = false;
+            }
         }
 
         internal bool HasBotMoved(BotCommand command)
