@@ -1,4 +1,4 @@
-﻿using CyFi.Factories;
+using CyFi.Factories;
 using CyFi.Models;
 using CyFi.Runner;
 using Domain.Enums;
@@ -9,10 +9,12 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Runner.Factories;
 using Runner.Services;
 using Serilog;
 using Serilog.Context;
+using Serilog.Extensions.Logging;
 using System.Reflection;
 
 namespace CyFi
@@ -21,8 +23,6 @@ namespace CyFi
     {
         private static IConfiguration? configuration;
 
-        private static IWebHostBuilder _hostBuilder;
-
         public static async Task Main(string[] args)
         {
             Environment.SetEnvironmentVariable("LOGPATH", Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
@@ -30,7 +30,7 @@ namespace CyFi
 #if DEBUG
             environment = Environments.Development;
 #elif RELEASE
-        environment = Environment.GetEnvironmentVariable("ENVIRONMENT") ?? Environments.Development;;
+            environment = string.Equals(Environment.GetEnvironmentVariable("ENVIRONMENT"), "Production", StringComparison.InvariantCultureIgnoreCase) ? Environments.Production : Environments.Development;
 #endif
 
             configuration = new ConfigurationBuilder()
@@ -44,25 +44,34 @@ namespace CyFi
             // Overwrite file name because Serilog does not have a way to do it in appsettings
             configuration[filePathKV.Key] = filePathKV.Value?.Replace("@t", DateTime.UtcNow.ToString("yyyy'_'MM'_'dd'T'HH'_'mm'_'ss.ffff"));
 
+            configuration["GameSettings:NumberOfPlayers"] = string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("BOT_COUNT")) ? configuration["GameSettings:NumberOfPlayers"] : Environment.GetEnvironmentVariable("BOT_COUNT");
+
             Log.Logger = new LoggerConfiguration()
                 .Enrich.FromLogContext()
                 .Enrich.WithMachineName()
                 .ReadFrom.Configuration(configuration)
                 .CreateLogger();
 
+            // Initialize CloudCallbackFactory manually so we can announce failures early
+            ILogger<CloudIntegrationService> cloudLog = new SerilogLoggerFactory(Log.Logger).CreateLogger<CloudIntegrationService>();
+            AppSettings appSettings = new();
+            CloudCallbackFactory cloudCallbackFactory = new(appSettings);
+            CloudIntegrationService cloudIntegrationService = new(appSettings, cloudLog, cloudCallbackFactory);
+
             using (LogContext.PushProperty("ConsoleOnly", value: true))
             {
+                IHost? host = default;
                 try
                 {
                     Log.Information($"Starting {Assembly.GetCallingAssembly().GetName().Name}");
-                    var host = Host.CreateDefaultBuilder(args)
+                    host = Host.CreateDefaultBuilder(args)
                         .ConfigureServices((context, services) =>
                         {
                             services.AddSingleton<AppSettings>();
                             services.Configure<CyFiGameSettings>(configuration.GetSection("GameSettings"));
                             services.AddSingleton<BotFactory>();
-                            services.AddSingleton<ICloudCallbackFactory, CloudCallbackFactory>();
-                            services.AddSingleton<ICloudIntegrationService, CloudIntegrationService>();
+                            services.AddSingleton<ICloudCallbackFactory>(cloudCallbackFactory);
+                            services.AddSingleton<ICloudIntegrationService>(cloudIntegrationService);
                             services.AddSingleton<Queue<BotCommand>>();
                             services.AddSingleton<CyFiEngine>();
                             services.AddSingleton<WorldFactory>();
@@ -101,7 +110,7 @@ namespace CyFi
                     connection.ServerTimeout = TimeSpan.FromSeconds(1000);
 
                     host.Services.GetRequiredService<CyFiEngine>().SetHubConnection(ref connection);
-                    host.Services.GetRequiredService<ICloudIntegrationService>().Announce(CloudCallbackType.Initializing);
+                    await cloudIntegrationService.Announce(CloudCallbackType.Initializing);
 
                     host.Run();
 
@@ -112,6 +121,7 @@ namespace CyFi
                 catch (Exception ex)
                 {
                     Log.Fatal(ex, $"{Assembly.GetCallingAssembly().GetName().Name} failed to start");
+                    await cloudIntegrationService.Announce(CloudCallbackType.Failed, ex);
                 }
             }
         }

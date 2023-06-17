@@ -1,0 +1,17 @@
+{
+  "profiles": {
+    "CyFi": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "API_KEY": "",
+        "API_URL": "https://v13pnwufji.execute-api.eu-west-1.amazonaws.com/staging/match/status",
+        "BOT_COUNT": "1",
+        "CLUSTER_NAME": "",
+        "ENVIRONMENT": "staging",
+        "LOG_LEVEL": "debug",
+        "MATCH_ID": "123",
+        "WORLD_SEED": "20264"
+      }
+    }
+  }
+}

@@ -1,5 +1,3 @@
-using System.Net;
-using System.Text;
 using Domain.Configs;
 using Engine.Communication;
 using Engine.Enums;
@@ -8,6 +6,8 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using System.Net;
+using System.Text;
 
 namespace Engine.Services
 {
@@ -35,7 +35,7 @@ namespace Engine.Services
         public async Task Startup()
         {
             Logger.LogInfo("Core", "Starting up");
-            
+
             var ip = Environment.GetEnvironmentVariable("RunnerIp");
             ip = string.IsNullOrWhiteSpace(ip)
                 ? engineConfig.RunnerUrl
@@ -124,13 +124,13 @@ namespace Engine.Services
         private void SetUpEndpoints()
         {
             connection.On<Guid, string>("RegisterBot", OnRegisterBot);
-            
+
             /* Disconnect Request Handler */
             connection.On<Guid>("Disconnect", OnDisconnect);
 
             /* Bot Command Handler*/
             gameController.Setup(connection);
-            
+
             connection.On("StartGame", OnStartGame);
             connection.On<int>("TickAck", OnTickAck);
         }
@@ -155,7 +155,7 @@ namespace Engine.Services
             // connection.SendAsync("PublishGameState", publishedState);
 
             connection.SendAsync("ReceiveConfigValues", engineConfig);
-            
+
             engineService.PendingStart = true;
             for (var i = 5; i > 1; i--)
             {

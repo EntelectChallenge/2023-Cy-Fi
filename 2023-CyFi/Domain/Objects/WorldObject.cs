@@ -1,7 +1,6 @@
 ﻿using Domain.Enums;
 using Logger;
 using System.Drawing;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -83,7 +82,7 @@ namespace Domain.Objects
             int minConnections,
             int maxConnections
         )
-        {           
+        {
             this.ChangeLog = new List<ChangeLogItem>();
 
             pathMask = new bool[width][];
@@ -178,7 +177,7 @@ namespace Domain.Objects
 
                 List<Tuple<int, int>> randomPath = new(); // Generate new path.
                                                           // Add some padding so paths aren't right on top of each other.
-              
+
 
                 // Random Y position within the slice.
                 int startY = random.Next(pathStartY, pathEndY);
@@ -372,10 +371,9 @@ namespace Domain.Objects
                         {
                             //Place Collectible 
                             //Check you are not placing the object on the ladders
-
-
+                            
                             if (
-                                map[paths[i].Item1][paths[i].Item2] != (int)ObjectType.Ladder
+                                map[paths[i].Item1][paths[i].Item2] != (int)ObjectType.Ladder && paths[i].Item1 <= this.width && paths[i].Item2 + 2 < this.height
                                  )
                             {
                                 map[paths[i].Item1][paths[i].Item2 + 2] = (int)ObjectType.Collectible;

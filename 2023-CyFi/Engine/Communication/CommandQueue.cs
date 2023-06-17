@@ -12,7 +12,7 @@ public class CommandQueue
         this.converter = converter;
         commands = new Queue<BotCommand>();
     }
-    
+
     public void Add(BotCommand command)
     {
         commands.Enqueue(command);

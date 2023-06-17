@@ -1,5 +1,4 @@
-﻿using CyFi.Models;
-using Logger;
+﻿using Logger;
 using Microsoft.Extensions.Logging;
 
 namespace CyFi.Entity
@@ -39,11 +38,11 @@ namespace CyFi.Entity
         public Bot() { }
 
 
-        public Bot(CyFiGameSettings settings, ILogger<Bot> logger, string? nickName, string connectionId, Guid? id = null)
+        public Bot(ILogger<Bot> logger, string? nickName, string connectionId, Guid? id = null)
         {
             Id = id ?? Guid.NewGuid();
             Logger = new GameLogger<Bot>(logger);
-            Hero = new HeroEntity(Id, settings);
+            Hero = new HeroEntity(Id);
             NickName = nickName ?? Id.ToString();
             ConnectionId = connectionId;
         }

@@ -1,5 +1,4 @@
 ﻿using Domain.Components.StateChanges;
-using Logger;
 
 namespace Domain.Components;
 
@@ -16,11 +15,11 @@ public static class Tracker
     {
         return StateChanges.Aggregate("START", (current, stateChange) => current + ("\n" + stateChange.Serialize()));
     }
-/*    public static void TrackChange(Ci stateChange)
-    {
+    /*    public static void TrackChange(Ci stateChange)
+        {
 
 
-    }    */   
+        }    */
 
     // For example, we could get the changes at the end of each tick
     // and then clear the list so that the new tick start afresh.

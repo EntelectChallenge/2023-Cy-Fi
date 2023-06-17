@@ -48,23 +48,33 @@ public class Falling : BaseState
     public override void UpdatePhysics()
     {
         base.UpdatePhysics();
+        // Try both movements first
         movementSm.GameObject.deltaY = -1;
 
-        var onlyAir = Collisions.OnlyAirIrCollectableBelow(movementSm.GameObject, movementSm.World);
-        var noCollisions = Collisions.NoHeroCollision(movementSm.GameObject, movementSm.CollidableObjects);
+        var onlyAir = Collisions.OnlyAirOrCollectableBelow(movementSm.GameObject, movementSm.World);
+        var noCollisions = Collisions.NoWorldCollision(movementSm.GameObject, movementSm.World);
         var attemptMove = Movements.AttemptMove(movementSm);
 
-        //   if (Collisions.OnlyAirBelow(movementSm.GameObject, movementSm.World) &&
-        //   Collisions.NoHeroCollision(movementSm.GameObject, movementSm.CollidableObjects) &&
-        //   Movements.AttemptMove(movementSm))
         if (onlyAir && noCollisions && attemptMove)
         {
             Movements.UpdateHeroPositions(movementSm);
+            return;
         }
-        else
+
+        // If failed just fall
+        movementSm.GameObject.deltaX = 0;
+        onlyAir = Collisions.OnlyAirOrCollectableBelow(movementSm.GameObject, movementSm.World);
+        noCollisions = Collisions.NoWorldCollision(movementSm.GameObject, movementSm.World);
+        attemptMove = Movements.AttemptMove(movementSm);
+
+        if (onlyAir && noCollisions && attemptMove)
         {
-            movementSm.GameObject.deltaY = 0;
-            movementSm.ChangeState(movementSm.Idle);
+            Movements.UpdateHeroPositions(movementSm);
+            return;
         }
+
+        // Otherwise stop falling
+        movementSm.GameObject.deltaY = 0;
+        movementSm.ChangeState(movementSm.Idle);
     }
 }

@@ -1,5 +1,4 @@
-﻿using CyFi.Physics.Movement;
-using CyFi.Physics.Utils;
+﻿using CyFi.Physics.Utils;
 using Domain.Enums;
 
 namespace CyFi.Physics.Movement;
@@ -62,13 +61,19 @@ public class Jumping : BaseState
         // or ladder
         var maxHeightReached = jumpHeight >= maxHeight;
         var successfulMove = Movements.AttemptMove(movementSm);
-        if (!successfulMove || maxHeightReached)
+        if (!successfulMove)
         {
             movementSm.ChangeState(movementSm.Idle);
             jumpHeight = 0;
             return;
         }
-        
+        if (maxHeightReached)
+        {
+            movementSm.ChangeState(movementSm.Falling);
+            jumpHeight = 0;
+            return;
+        }
+
         jumpHeight++;
         Movements.UpdateHeroPositions(movementSm);
     }

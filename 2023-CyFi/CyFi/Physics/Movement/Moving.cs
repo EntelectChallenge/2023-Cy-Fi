@@ -1,6 +1,4 @@
 ﻿using CyFi.Physics.Utils;
-using Domain.Components;
-using Domain.Models;
 
 namespace CyFi.Physics.Movement;
 

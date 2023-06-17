@@ -64,7 +64,7 @@
                 case 2:
                     return (int)Math.Floor(totalPlatformLength * 20 / 100);
                 case 3:
-                    return (int)Math.Floor(totalPlatformLength * 15/ 100);
+                    return (int)Math.Floor(totalPlatformLength * 15 / 100);
                 default:
                     Console.Write($"Level {Level} passed does not exist");
                     throw new Exception("Level cannot be determined");

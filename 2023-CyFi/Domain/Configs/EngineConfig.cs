@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Domain.Enums;
-using Domain.Models;
-
-namespace Domain.Configs
+﻿namespace Domain.Configs
 {
     public class EngineConfig
     {
@@ -17,7 +11,7 @@ namespace Domain.Configs
         public int WorldSeed { get; set; }
         public Seeds Seeds { get; set; }
     }
-    
+
     public class Seeds
     {
         public List<int> PlayerSeeds { get; set; }

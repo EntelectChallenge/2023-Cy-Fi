@@ -1,12 +1,11 @@
-﻿using Domain.Components;
-using Domain.Enums;
+﻿using Domain.Enums;
 
 namespace CyFi.Physics;
 
 public class StateMachine
 {
     public BaseState? CurrentState { get; set; }
-    
+
     public void Start()
     {
         CurrentState = GetInitialState();
@@ -20,20 +19,20 @@ public class StateMachine
 
     public void UpdateInput(InputCommand inputCommand)
     {
-        Console.WriteLine("update input");
+        Console.WriteLine("Updating Input!");
         CurrentState?.UpdateInput(inputCommand);
     }
 
     public void LateUpdate()
     {
-        Console.WriteLine("update physics");
+        Console.WriteLine("Updating Physics!");
         CurrentState?.UpdatePhysics();
     }
 
     public void ChangeState(BaseState newState)
     {
         CurrentState?.Exit();
-        
+
         CurrentState = newState;
         CurrentState?.Enter();
     }

@@ -1,8 +1,8 @@
-﻿using System.Diagnostics;
-using Domain.Configs;
-using Engine.Models;
+﻿using Domain.Configs;
 using Engine.Game;
+using Engine.Models;
 using Microsoft.AspNetCore.SignalR.Client;
+using System.Diagnostics;
 
 namespace Engine.Services
 {
@@ -49,13 +49,13 @@ namespace Engine.Services
             // -------- START STOPWATCH RULE
             var stopwatch = Stopwatch.StartNew();
             var stop2 = Stopwatch.StartNew();
-            
+
             gameLoop.Setup();
 
             WaitForGameStart();
-            
+
             await hubConnection.InvokeAsync("NotifyOfStartGame");
-            
+
             do
             {
                 currentTick++;
@@ -64,14 +64,14 @@ namespace Engine.Services
                 stop2.Restart();
 
                 HasWinner = gameLoop.Run();
-                
+
                 Logger.LogDebug("RunLoop", $"Processing tick took {stop2.ElapsedMilliseconds}ms");
 
                 stop2.Restart();
 
                 // SEND UPDATED STATE EVENT RULE
                 await hubConnection.InvokeAsync("TickEnded", currentTick);
-                
+
                 // // PUBLISH GAME STATE
                 // var gameStateDto = worldStateService.GetPublishedState();
                 // await hubConnection.InvokeAsync("PublishGameState", gameStateDto);

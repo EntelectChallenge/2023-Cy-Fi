@@ -2,7 +2,9 @@
 using CyFi.Entity;
 using CyFi.Factories;
 using CyFi.Models;
+using CyFi.RootState;
 using CyFi.Runner;
+using Domain.Components;
 using Domain.Models;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -20,6 +22,8 @@ namespace CyFiTests.Runner
 
         IOptions<CyFiGameSettings> testSettings;
         Mock<ILogger<CyFiEngine>> mockEngineLogger;
+        Mock<ILogger<CyFiState>> mockStateLogger;
+        Mock<ILogger<GameComplete>> mockGameCompleteLogger;
         Mock<ILoggerFactory> mockLoggerFactory;
         Mock<BotFactory> mockBotFactory;
         Mock<WorldFactory> mockWorldFactory;
@@ -46,14 +50,17 @@ namespace CyFiTests.Runner
                     new Map()
                     {
                         Seed = 12345,
-                        Height = 10,
-                        Width = 10,
+                        Height = 500,
+                        Width = 200,
                     }
-                }
-
+                },
+                TickTimer = 100,
+                NumberOfPlayers = 4
             });
 
             mockEngineLogger = new Mock<ILogger<CyFiEngine>>();
+            mockStateLogger = new Mock<ILogger<CyFiState>>();
+            mockGameCompleteLogger = new Mock<ILogger<GameComplete>>();
             mockLoggerFactory = new Mock<ILoggerFactory>();
             mockBotFactory = new Mock<BotFactory>(testSettings, mockLoggerFactory.Object);
             mockWorldFactory = new Mock<WorldFactory>(mockLoggerFactory.Object);
@@ -69,9 +76,9 @@ namespace CyFiTests.Runner
 
             mockCaller.Setup(x => x.Caller).Returns(mockClientProxy.Object);
 
-            engine = new CyFiEngine(testSettings, mockContext.Object, mockQueue.Object, mockEngineLogger.Object, mockBotFactory.Object, mockWorldFactory.Object);
+            engine = new CyFiEngine(testSettings, mockContext.Object, mockQueue.Object, mockEngineLogger.Object, mockStateLogger.Object, mockGameCompleteLogger.Object, mockBotFactory.Object, mockWorldFactory.Object, mockCloudIntegrationService.Object);
 
-            runnerHubUnderTest = new RunnerHub(engine, mockCloudIntegrationService.Object, mockLogger.Object, mockContext.Object)
+            runnerHubUnderTest = new RunnerHub(engine, mockCloudIntegrationService.Object, mockLogger.Object)
             {
                 Clients = mockCaller.Object,
                 Context = mockHubCallerContext.Object,
@@ -89,7 +96,7 @@ namespace CyFiTests.Runner
             mockBot.Object.Id = botId;
             mockBot.Object.NickName = "testBot";
 
-            mockBot.Object.Hero = new HeroEntity(Id, testSettings.Value);
+            mockBot.Object.Hero = new HeroEntity(Id);
             mockBotFactory.Setup(f => f.CreateBot("testBot", connectionId.ToString())).Returns(mockBot.Object);
 
             mockHubCallerContext.Setup(c => c.ConnectionId).Returns(connectionId.ToString());

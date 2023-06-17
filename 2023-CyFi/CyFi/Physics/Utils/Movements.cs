@@ -46,11 +46,15 @@ public static class Movements
 
     public static bool ShouldStartFalling(MovementSM movementSm)
     {
-        Console.WriteLine("Check Falling");
-
         Console.WriteLine($"World LEVEL: {movementSm.World.level}");
 
-        return Collisions.OnlyAirIrCollectableBelow(movementSm.GameObject, movementSm.World);
+        Console.Write("Check Falling: ");
+
+        bool falling = Collisions.OnlyAirOrCollectableBelow(movementSm.GameObject, movementSm.World);
+
+        Console.Write((falling == true) ? "Bot is falling\n" : "Bot is not falling\n");
+
+        return falling;
     }
 
     public static void UpDecision(MovementSM movementSm)
@@ -61,7 +65,7 @@ public static class Movements
         //   var onGround = movementSm.GameObject.BelowBoundingBox().Any(point => movementSm.World.map[point.X][point.Y] != (int)ObjectType.Air);
 
         var test = movementSm.GetStateType;
-        if (Collisions.OnlyAirIrCollectableBelow(movementSm.GameObject, movementSm.World))
+        if (Collisions.OnlyAirOrCollectableBelow(movementSm.GameObject, movementSm.World))
         {
             Console.WriteLine("Not on surface");
             return;

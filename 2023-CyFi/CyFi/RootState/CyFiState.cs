@@ -39,18 +39,15 @@ namespace CyFi.RootState
 
         public void Update()
         {
-
             //What order do we want to update the bots in?
             //Fastest bot? 
             Bots.ForEach((bot) =>
             {
-                Console.WriteLine("Running Physics component");
+                Console.WriteLine($"Update Physics component for bot: {bot.NickName}");
 
                 bot.Hero.PhysicsComponent.Update(bot.Hero, Bots.Except(new List<Bot>() { bot }).Select((bot) => bot.Hero).ToList(), Levels[bot.CurrentLevel]);
                 bot.LastUpdated = DateTime.Now;
             });
-
-            //Save to file
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

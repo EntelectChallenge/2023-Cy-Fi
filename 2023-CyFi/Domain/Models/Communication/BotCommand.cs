@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Domain.Models.Communication;
+﻿namespace Domain.Models.Communication;
 
 public class BotCommand
 {

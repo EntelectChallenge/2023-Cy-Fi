@@ -5,7 +5,7 @@ namespace Domain.Components;
 public static class Applier
 {
     private static List<StateChange> StateChanges = new();
-    
+
     public static List<StateChange> DeserializeStateChanges(string serializedChanges)
     {
         var lines = serializedChanges.Split("\n");
@@ -20,7 +20,8 @@ public static class Applier
         if (change.Contains("Updated"))
         {
             return new Update().Deserialize(change);
-        } if (change.Contains("Created"))
+        }
+        if (change.Contains("Created"))
         {
             return new Create().Deserialize(change);
         }

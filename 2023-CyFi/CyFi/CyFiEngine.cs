@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Python.Core;
+using Runner.Services;
 using System.Drawing;
 using System.Timers;
 using static CyFi.Settings.GameSettings;
@@ -31,6 +32,8 @@ namespace CyFi
         private readonly BotFactory BotFactory;
         public static Timer TickTimer;
         public IGameLogger<CyFiEngine> Logger;
+        public IGameLogger<CyFiState> StateLogger;
+        public IGameLogger<GameComplete> GameCompleteLogger;
 
         public Queue<BotCommand> CommandQueue;
 
@@ -39,16 +42,25 @@ namespace CyFi
 
         private List<WorldObject> levels;
 
+        private string cloudSeed;
+
+        public ICloudIntegrationService cloudIntegrationService;
+
         public CyFiEngine(
             IOptions<CyFiGameSettings> settings,
             IHubContext<RunnerHub> context,
             Queue<BotCommand> CommandQueue,
             ILogger<CyFiEngine> Logger,
+            ILogger<CyFiState> StateLogger,
+            ILogger<GameComplete> GameCompleteLogger,
             BotFactory botFactory,
-            WorldFactory worldFactory
+            WorldFactory worldFactory,
+            ICloudIntegrationService cloudIntegrationService
             )
         {
             GameSettings = settings.Value;
+            cloudSeed = Environment.GetEnvironmentVariable("WORLD_SEED") ?? "0";
+            GameSettings.Levels.ForEach(level => level.Seed = int.Parse(cloudSeed) + level.Seed);
 
             levels = new();
             for (int level = 0; level < GameSettings.Levels.Count; level++)
@@ -64,9 +76,16 @@ namespace CyFi
 
             this.CommandQueue = CommandQueue;
             this.Logger = new GameLogger<CyFiEngine>(Logger);
+            this.StateLogger = new GameLogger<CyFiState>(StateLogger);
+            this.GameCompleteLogger = new GameLogger<GameComplete>(GameCompleteLogger);
             this.BotFactory = botFactory;
 
             this.context = context;
+
+            this.cloudIntegrationService = cloudIntegrationService;
+
+            // Create a timer with a given interval
+            TickTimer = new Timer(GameSettings.TickTimer);
         }
 
         public HubConnection SetHubConnection(ref HubConnection connection) => hubConnection = connection;
@@ -88,8 +107,10 @@ namespace CyFi
 
                 if (cyFiState.Bots.Count == GameSettings.NumberOfPlayers)
                 {
-                    IGameLogger<CyFiState>.File(cyFiState, 0);
+                    StateLogger.File(cyFiState, FILE_STATE.START);
                 }
+
+                cloudIntegrationService.AddPlayer(0, bot.Id.ToString(), 0, 0, bot.Id.ToString());
 
                 return bot.Id;
             }
@@ -105,7 +126,7 @@ namespace CyFi
             {
                 await hubConnection.StartAsync();
             }
-            SetTimer(GameSettings.TickTimer);
+            SetTimer();
 
             if (cyFiState.Bots.Count >= GameSettings.NumberOfPlayers)
             {
@@ -125,7 +146,7 @@ namespace CyFi
             List<BotStateDTO> botStates = new List<BotStateDTO>();
             foreach (var bot in cyFiState.Bots)
             {
-
+                cloudIntegrationService.UpdatePlayer(bot.Id.ToString(), matchPoints: bot.TotalPoints);
                 var oppositionBotsOnSameLevel = cyFiState.Bots.Except(new List<Bot> { bot }).Where(b => b.CurrentLevel == bot.CurrentLevel).ToList();
 
                 botStates.Add(new BotStateDTO(bot, oppositionBotsOnSameLevel, bot.Hero, cyFiState.Levels[bot.CurrentLevel], cyFiState.Tick));
@@ -137,8 +158,7 @@ namespace CyFi
 
         }
 
-
-        private void GameLoop()
+        public override void GameLoop()
         {
             //Send updated bot state
 
@@ -156,7 +176,9 @@ namespace CyFi
                     // Get the bot it belongs too
                     playerObject = cyFiState.Bots.FirstOrDefault((bot) => bot.Id.Equals(playerAction.BotId));
 
-                    if (playerObject.Hero.Collected >= GameSettings.Collectables[playerObject.CurrentLevel])
+                    int numOnLevel = cyFiState.Bots.Count((bot) => bot.CurrentLevel == playerObject.CurrentLevel);
+
+                    if (playerObject.Hero.Collected >= GameSettings.Collectables[numOnLevel - 1])
                     {
                         AdvanceToLevel(playerObject);
                         playerObject.Hero.Collected = 0;
@@ -189,9 +211,6 @@ namespace CyFi
                         playerObject.Hero.TimesDug = 0;
                         playerObject.Hero.Collected++;
                     }
-
-
-                    int numOnLevel = cyFiState.Bots.Count((bot) => bot.CurrentLevel == playerObject.CurrentLevel);
                 }
             }
 
@@ -212,10 +231,10 @@ namespace CyFi
 
                 cyFiState.Levels.ForEach(level => state.Levels.Add(new WorldObject(level.ChangeLog)));
 
-                IGameLogger<CyFiState>.File(state, 1);
+                StateLogger.File(state, FILE_STATE.APPEND);
             }
 
-            if (cyFiState.Tick > GameSettings.MaxTicks)
+            if (cyFiState.Tick >= GameSettings.MaxTicks)
             {
                 GracefulShutdown();
             }
@@ -225,19 +244,7 @@ namespace CyFi
         {
             if (bot.CurrentLevel < GameSettings.Levels.Count - 1)
             {
-                for (int i = 0; i < CommandQueue.Count; i ++)
-                {
-                    BotCommand command;
-                    var canDequeue = CommandQueue.TryDequeue(out command);
-
-                    if (canDequeue)
-                    {
-                        if (command.BotId != bot.Id)
-                        {
-                            CommandQueue.Enqueue(command);
-                        }
-                    }
-                }
+                CommandQueue = new Queue<BotCommand>(CommandQueue.Where(command => command.BotId != bot.Id));
 
                 bot.CurrentLevel++;
                 bot.TotalPoints += bot.Hero.Collected;
@@ -245,14 +252,6 @@ namespace CyFi
                 Point startPosition = cyFiState.Levels[bot.CurrentLevel].start;
                 bot.Hero.XPosition = startPosition.X;
                 bot.Hero.YPosition = startPosition.Y;
-
-                //TallyPoints
-                foreach (Bot otherBot in cyFiState.Bots.Except(new[] { bot }))
-                {
-                    //Override to log change
-                    otherBot.TotalPoints += (5 * otherBot.Hero.Collected);
-                }
-                bot.TotalPoints += bot.Hero.Collected;
 
                 bot.Hero.MovementSm.World = cyFiState.Levels[bot.CurrentLevel];
             }
@@ -266,10 +265,14 @@ namespace CyFi
 
         private void EndGame()
         {
-            Console.WriteLine("Game complete :)");
-            IGameLogger<CyFiState>.File(null, 2);
+            Console.WriteLine("Engine says: Game complete");
 
-            var rankedBots = cyFiState.Bots.OrderBy(bot => bot.TotalPoints);
+            Parallel.ForEach(cyFiState.Bots, bot =>
+            {
+                bot.TotalPoints += bot.Hero.Collected;
+            });
+
+            var rankedBots = cyFiState.Bots.OrderByDescending(bot => bot.TotalPoints).ToList();
 
             var gameComplete = new GameComplete
             {
@@ -288,10 +291,16 @@ namespace CyFi
                 WinngingBot = rankedBots.First()
             };
 
+            for (int index = 0; index < rankedBots.Count; index++)
+            {
+                var currentBot = rankedBots[index];
+                cloudIntegrationService.UpdatePlayer(currentBot.Id.ToString(), finalScore: currentBot.TotalPoints, matchPoints: currentBot.TotalPoints, placement: index + 1);
+            }
 
-            IGameLogger<GameComplete>.File(gameComplete, 5, "GameComplete");
+            GameCompleteLogger.File(gameComplete, null, "GameComplete");
+            StateLogger.File(null, FILE_STATE.END);
             //Disconnect all bots
-            hubConnection.InvokeAsync("GameComplete", gameComplete);
+            hubConnection.InvokeAsync("GameComplete", int.Parse(cloudSeed), cyFiState.Tick);
         }
 
         private void GracefulShutdown()
@@ -302,16 +311,12 @@ namespace CyFi
             EndGame();
         }
 
-        private void SetTimer(int timeLimit)
+        private void SetTimer()
         {
-            // Create a timer with a givin interval
-            TickTimer = new Timer(timeLimit);
             // Hook up the Elapsed event for the timer. 
             TickTimer.Elapsed += OnTimedEvent;
             TickTimer.AutoReset = true;
         }
-
-
 
         private void OnTimedEvent(object? sender, ElapsedEventArgs e)
         {

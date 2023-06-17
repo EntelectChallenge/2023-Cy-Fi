@@ -3,12 +3,7 @@ using CyFi.Models;
 using CyFi.Settings;
 using Microsoft.Extensions.Configuration;
 using NUnit.Framework;
-using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CyFiTests.Entity
 {
@@ -29,7 +24,7 @@ namespace CyFiTests.Entity
 
             testSettings = config.Get<CyFiGameSettings>();
 
-            heroEntityUnderTest = new HeroEntity(Id, testSettings);
+            heroEntityUnderTest = new HeroEntity(Id);
         }
 
         [Test]

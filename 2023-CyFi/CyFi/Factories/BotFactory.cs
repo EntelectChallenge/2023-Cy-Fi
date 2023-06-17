@@ -7,13 +7,11 @@ namespace CyFi.Factories
 {
     public class BotFactory
     {
-        public CyFiGameSettings gameSettings;
         public ILoggerFactory loggerFactory;
 
-        public BotFactory(IOptions<CyFiGameSettings> gameSettings, 
-            ILoggerFactory loggerFactory) 
+        public BotFactory(IOptions<CyFiGameSettings> gameSettings,
+            ILoggerFactory loggerFactory)
         {
-            this.gameSettings = gameSettings.Value;
             this.loggerFactory = loggerFactory;
         }
 
@@ -21,7 +19,7 @@ namespace CyFi.Factories
         {
             ILogger<Bot> botLogger = loggerFactory.CreateLogger<Bot>();
 
-            return new Bot(gameSettings, botLogger, nickName, connectionId);
+            return new Bot(botLogger, nickName, connectionId);
         }
     }
 }

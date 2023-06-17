@@ -1,4 +1,4 @@
-# Entelect Challenge 2023: Cy-Fi 🏆 Release 2023.2.1
+# Entelect Challenge 2023: Cy-Fi 🏆 Release 2023.2.2
 
 ---
 >### _NB:_ Change log 

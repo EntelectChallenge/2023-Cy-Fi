@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Engine.Services
+﻿namespace Engine.Services
 {
     public static class Logger
     {

@@ -38,7 +38,7 @@ namespace CyFiTests.Inputs
             testSettings = config.GetSection("GameSettings").Get<CyFiGameSettings>();
             testWorld = WorldFactory.CreateWorld(testSettings.Levels.First(), 1);
 
-            heroEntity = new HeroEntity(Id, testSettings);
+            heroEntity = new HeroEntity(Id);
             heroEntity.MovementSm.World = testWorld;
             heroInputUnderTest = (HeroInput)heroEntity.InputComponent;
         }

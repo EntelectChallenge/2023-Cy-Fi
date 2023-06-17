@@ -3,14 +3,9 @@ using Domain.Enums;
 using Domain.Exceptions;
 using Domain.Models;
 using Logger;
-using System.Windows;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using Mono.Unix.Native;
-using Newtonsoft.Json;
 using Runner.Services;
-using System;
-using static IronPython.SQLite.PythonSQLite;
 
 namespace CyFi.Runner
 {
@@ -19,15 +14,13 @@ namespace CyFi.Runner
         private readonly CyFiEngine engine;
         private readonly ICloudIntegrationService _cloudIntegrationService;
         private readonly IGameLogger<RunnerHub> _logger;
-        private readonly IHubContext<RunnerHub> context;
         private StateObject visualizer;
 
-        public RunnerHub(CyFiEngine engine, ICloudIntegrationService cloudIntegrationService, ILogger<RunnerHub> logger, IHubContext<RunnerHub> context)
+        public RunnerHub(CyFiEngine engine, ICloudIntegrationService cloudIntegrationService, ILogger<RunnerHub> logger)
         {
             this.engine = engine;
             _cloudIntegrationService = cloudIntegrationService;
             _logger = new GameLogger<RunnerHub>(logger);
-            context = context;
         }
 
         #region Runner endpoints
@@ -84,15 +77,16 @@ namespace CyFi.Runner
         /// When the game is complete.
         /// </summary>
         /// <returns></returns>
-        public async Task GameComplete()
+        public async Task GameComplete(int? seed, int? ticks)
         {
-
-            Console.WriteLine("Game Completeted");
+            Console.WriteLine("Announcing Game Completed");
             _logger.ConsoleL(LogLevel.Information, "Game Complete");
 
             await Clients.All.SendAsync("ReceiveGameComplete");
-            await _cloudIntegrationService.Announce(CloudCallbackType.Finished);
+            await _cloudIntegrationService.Announce(CloudCallbackType.Finished, seed: seed, ticks: ticks);
 
+            await _logger.FlushToS3(!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("PUSH_LOGS_TO_S3")));
+            await _cloudIntegrationService.Announce(CloudCallbackType.LoggingComplete, null, null);
         }
 
         #endregion
@@ -173,12 +167,9 @@ namespace CyFi.Runner
         {
             if (engine.cyFiState.Bots.Count == engine.GameSettings.NumberOfPlayers)
             {
-                await _cloudIntegrationService.AnnounceNoOp(CloudCallbackType.Started);
+                await _cloudIntegrationService.Announce(CloudCallbackType.Started);
 
-                //Task.Factory.StartNew(() => engine.StartGame());
                 engine.StartGame();
-                //TODO: Do we want to let all clients know the game has started?
-
             }
         }
         #endregion

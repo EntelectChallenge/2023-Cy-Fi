@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33530.505
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReferenceBot", "ReferenceBot\ReferenceBot.csproj", "{3A0EF343-F301-4B91-B874-47D76B9F8414}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Domain", "Domain\Domain.csproj", "{7C459144-7A5F-4845-8C5B-A5E18DDE2A7E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{4AF0AF67-617A-4E3E-9A64-89B45E25C94D}"
+	ProjectSection(SolutionItems) = preProject
+		Dockerfile = Dockerfile
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3A0EF343-F301-4B91-B874-47D76B9F8414}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3A0EF343-F301-4B91-B874-47D76B9F8414}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3A0EF343-F301-4B91-B874-47D76B9F8414}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3A0EF343-F301-4B91-B874-47D76B9F8414}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7C459144-7A5F-4845-8C5B-A5E18DDE2A7E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C459144-7A5F-4845-8C5B-A5E18DDE2A7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C459144-7A5F-4845-8C5B-A5E18DDE2A7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C459144-7A5F-4845-8C5B-A5E18DDE2A7E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C4308090-3FD0-4AB4-8C31-90931EE5E949}
+	EndGlobalSection
+EndGlobal

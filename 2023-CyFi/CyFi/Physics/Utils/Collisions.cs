@@ -1,31 +1,15 @@
-﻿using CyFi.Entity;
-using CyFi.Physics.Movement;
-using Domain.Enums;
+﻿using Domain.Enums;
 using Domain.Objects;
 using System.Drawing;
-using System.Runtime.CompilerServices;
-using static IronPython.Modules._ast;
 
 namespace CyFi.Physics.Utils;
 
 public static class Collisions
 {
 
-    public static bool CollidesWithMap(Point[] boundingBox, WorldObject world, ObjectType[] objectTypes)
+    public static bool CollidesWithObjectTypes(Point[] boundingBox, WorldObject world, ObjectType[] objectTypes)
     {
-        var bottomLeft = boundingBox[0];
-        var topRight = boundingBox[3];
-        for (int x = bottomLeft.X; x <= topRight.X; x++)
-        {
-            for (int y = bottomLeft.Y; y <= topRight.Y; y++)
-            {
-                if (objectTypes.Cast<int>().Contains(world.map[x][y]))
-                {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return boundingBox.Any(point => objectTypes.Contains((ObjectType)world.map[point.X][point.Y]));
     }
 
     public static bool InsideWorldBounds(Point[] boundingBox, WorldObject world)
@@ -68,25 +52,33 @@ public static class Collisions
     public static bool NoWorldCollision(GameObject gameObject, WorldObject world)
     {
         var test = InsideWorldBounds(gameObject.ProposedBoundingBox(), world) &&
-               !CollidesWithMap(gameObject.ProposedBoundingBox(), world, new[] { ObjectType.Solid });
+               !CollidesWithObjectTypes(gameObject.ProposedBoundingBox(), world, new[] { ObjectType.Solid });
         return test;
     }
 
-    public static bool OnlyAirIrCollectableBelow(GameObject gameObject, WorldObject world)
+    public static bool OnlyAirOrCollectableBelow(GameObject gameObject, WorldObject world)
     {
         var aboveMapBottomEdge = gameObject.YPosition > 0;
         if (!aboveMapBottomEdge) return false;
 
-        var bottomRow = gameObject.BoundingBox()
-            .Where(pos => pos.Y == gameObject.YPosition);
+        var objectsBelowGameObject = new List<ObjectType>()
+        {
+            (ObjectType)world.map[gameObject.XPosition][gameObject.YPosition - 1],
+            (ObjectType)world.map[gameObject.XPosition + 1][gameObject.YPosition - 1],
+        };
 
-        var onlyAirOrCoolectableBelow = bottomRow.All(pos => 
-        (world.map[pos.X][pos.Y - 1] == (int)ObjectType.Air) || (world.map[pos.X][pos.Y - 1] == (int)ObjectType.Collectible));
+        var onlyAirOrCollectableBelow = objectsBelowGameObject.All(obj => 
+            new List<ObjectType>()
+            {
+                ObjectType.Air,
+                ObjectType.Collectible
+            }
+            .Contains(obj)
+        );
 
-        Console.Write($"{onlyAirOrCoolectableBelow}");
+        bool onLadder = Intersects(gameObject, world, new[] { ObjectType.Ladder });
 
-
-        return onlyAirOrCoolectableBelow;
+        return onlyAirOrCollectableBelow && !onLadder;
     }
 
     public static bool HazardsBelow(GameObject gameObject, WorldObject world)

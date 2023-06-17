@@ -1,6 +1,5 @@
 ﻿using Domain.Enums;
 using Domain.Models;
-using Newtonsoft.Json;
 
 namespace Runner.Factories
 {
@@ -13,65 +12,56 @@ namespace Runner.Factories
             _appSettings = appSettings;
         }
 
-        public CloudCallback Build(CloudCallbackType callbackType)
+        public CloudCallback Build(CloudCallbackType callbackType, Exception? e, int? seed, int? ticks)
         {
             return callbackType switch
             {
                 CloudCallbackType.Initializing => new CloudCallback
                 {
-                    MatchId = _appSettings.MatchId,
+                    MatchId = _appSettings.MatchId ?? "",
                     MatchStatus = "initializing",
                     MatchStatusReason = "Startup"
                 },
                 CloudCallbackType.Ready => new CloudCallback
                 {
-                    MatchId = _appSettings.MatchId,
+                    MatchId = _appSettings.MatchId ?? "",
                     MatchStatus = "ready",
                     MatchStatusReason = $"All Components connected and ready for bots. Waiting for bots to connect."
                 },
                 CloudCallbackType.Started => new CloudCallback
                 {
-                    MatchId = _appSettings.MatchId,
+                    MatchId = _appSettings.MatchId ?? "",
                     MatchStatus = "started",
-                    MatchStatusReason = $"Match has started with bots"
+                    MatchStatusReason = $"Match has started with bots",
+                    Players = new List<CloudPlayer>(),
                 },
                 CloudCallbackType.Failed => new CloudCallback
                 {
-                    MatchId = _appSettings.MatchId,
+                    MatchId = _appSettings.MatchId ?? "",
                     MatchStatus = "failed",
-                    MatchStatusReason = "Failure reason", //TODO
-                    Players = MakeFailedPlayerList()
+                    MatchStatusReason = e.Message ?? "",
+                    Players = new List<CloudPlayer>()
                 },
                 CloudCallbackType.Finished => new CloudCallback
                 {
-                    MatchId = _appSettings.MatchId,
+                    MatchId = _appSettings.MatchId ?? "",
                     MatchStatus = "finished",
                     MatchStatusReason = "Game Complete.",
-                    Seed = "123", //TODO
-                    Ticks = "1", //TODO
-                    Players = MakePlayerList()
+                    Seed = seed.ToString() ?? "",
+                    Ticks = ticks.ToString() ?? "",
+                    Players = new List<CloudPlayer>(),
                 },
                 CloudCallbackType.LoggingComplete => new CloudCallback
                 {
-                    MatchId = _appSettings.MatchId,
+                    MatchId = _appSettings.MatchId ?? "",
                     MatchStatus = "logging_complete",
                     MatchStatusReason = "Game Complete. Logging Complete.",
-                    Seed = "123", //TODO
-                    Ticks = "1", //TODO
-                    Players = MakePlayerList()
+                    Seed = seed.ToString() ?? "",
+                    Ticks = ticks.ToString() ?? "",
+                    Players = new List<CloudPlayer>(),
                 },
                 _ => throw new ArgumentOutOfRangeException(nameof(callbackType), callbackType, "Unknown Cloud Callback Type")
             };
-        }
-
-        private List<CloudPlayer> MakeFailedPlayerList()
-        {
-            throw new NotImplementedException();
-        }
-
-        private List<CloudPlayer> MakePlayerList()
-        {
-            throw new NotImplementedException();
         }
     }
 }

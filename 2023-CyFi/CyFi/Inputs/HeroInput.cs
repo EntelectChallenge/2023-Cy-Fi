@@ -1,6 +1,6 @@
-﻿using Domain.Components;
+﻿using CyFi.Entity;
+using Domain.Components;
 using Domain.Enums;
-using CyFi.Entity;
 
 namespace CyFi.Inputs
 {

@@ -4,32 +4,32 @@ namespace Domain.Models
 {
     public class AppSettings
     {
-        private string appEnvironment 
-        { 
+        private string appEnvironment
+        {
             get
             {
                 return Environment.GetEnvironmentVariable("ENVIRONMENT") ?? Environments.Development;
             }
         }
-        public string? ApiUrl 
-        { 
+        public string? ApiUrl
+        {
             get
             {
                 return IsCloud ? Environment.GetEnvironmentVariable("API_URL") : null;
             }
-         }
-        public string? ApiKey 
+        }
+        public string? ApiKey
         {
             get
             {
                 return IsCloud ? Environment.GetEnvironmentVariable("API_KEY") : null;
             }
         }
-        public string? MatchId 
-        { 
+        public string? MatchId
+        {
             get
             {
-                return IsCloud? Environment.GetEnvironmentVariable("MATCH_ID") : null;
+                return IsCloud ? Environment.GetEnvironmentVariable("MATCH_ID") : null;
             }
         }
         public bool IsLocal => appEnvironment.Equals(Environments.Development, StringComparison.InvariantCultureIgnoreCase);

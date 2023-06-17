@@ -5,6 +5,6 @@ namespace Runner.Factories
 {
     public interface ICloudCallbackFactory
     {
-        CloudCallback Build(CloudCallbackType callbackType);
+        CloudCallback Build(CloudCallbackType callbackType, Exception? e = null, int? seed = null, int? ticks = null);
     }
 }

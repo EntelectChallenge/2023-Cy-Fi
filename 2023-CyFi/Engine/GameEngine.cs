@@ -2,7 +2,7 @@
 
 namespace Engine
 {
-    public class GameEngine
+    public abstract class GameEngine
     {
         public IGameLogger<GameEngine> Logger;
 
@@ -10,8 +10,6 @@ namespace Engine
         {
         }
 
-        public void GameLoop()
-        {
-        }
+        public abstract void GameLoop();
     }
 }

@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
+using System.Drawing;
 
 namespace CyFiTests.Physics
 {
@@ -39,7 +40,7 @@ namespace CyFiTests.Physics
                 .AddEnvironmentVariables()
                 .Build();
 
-
+            mockLoggerFactory = new Mock<ILoggerFactory>();
             WorldFactory = new WorldFactory(mockLoggerFactory.Object);
             testSettings = config.GetSection("GameSettings").Get<CyFiGameSettings>();
 
@@ -52,7 +53,7 @@ namespace CyFiTests.Physics
             }
             testWorld.map[4] = new int[2] { (int)ObjectType.Solid, (int)ObjectType.Air };
 
-            heroEntity = new HeroEntity(Id, testSettings);
+            heroEntity = new HeroEntity(Id);
             otherPlayers = new List<HeroEntity>();
             heroPhysicsUnderTest = (HeroPhysics)heroEntity.PhysicsComponent;
 
@@ -274,7 +275,17 @@ namespace CyFiTests.Physics
             Assert.AreEqual(0, heroEntity.XPosition);
 
             heroPhysicsUnderTest.Update(heroEntity, otherPlayers, testWorld);
-            Assert.IsTrue(heroEntity.MovementSm.GetStateType() == typeof(Idle));
+            Assert.IsTrue(heroEntity.MovementSm.GetStateType() == typeof(Jumping));
+            Assert.AreEqual(3, heroEntity.YPosition); //Max jump height is 3
+            Assert.AreEqual(0, heroEntity.XPosition);
+
+            heroPhysicsUnderTest.Update(heroEntity, otherPlayers, testWorld);
+            Assert.IsTrue(heroEntity.MovementSm.GetStateType() == typeof(Falling));
+            Assert.AreEqual(3, heroEntity.YPosition); //Max jump height is 3
+            Assert.AreEqual(0, heroEntity.XPosition);
+
+            heroPhysicsUnderTest.Update(heroEntity, otherPlayers, testWorld);
+            Assert.IsTrue(heroEntity.MovementSm.GetStateType() == typeof(Falling));
             Assert.AreEqual(2, heroEntity.YPosition);
             Assert.AreEqual(0, heroEntity.XPosition);
 
@@ -369,7 +380,7 @@ namespace CyFiTests.Physics
                 testWorld.map[i] = new int[2] { (int)ObjectType.Air, (int)ObjectType.Air };
             }
 
-            HeroEntity otherPlayer = new(Id, testSettings)
+            HeroEntity otherPlayer = new(Id)
             {
                 XPosition = 6
             };
@@ -401,7 +412,7 @@ namespace CyFiTests.Physics
             heroEntity.XPosition = 0;
             heroEntity.YPosition = 4;
 
-            HeroEntity otherPlayer = new(Id, testSettings);
+            HeroEntity otherPlayer = new(Id);
             otherPlayers.Add(otherPlayer);
 
             //    start
@@ -491,7 +502,7 @@ namespace CyFiTests.Physics
             }
             testWorld.map[5][0] = (int)ObjectType.Collectible;
 
-            HeroEntity otherPlayer = new(Id, testSettings);
+            HeroEntity otherPlayer = new(Id);
             otherPlayer.MovementSm.World = testWorld;
             otherPlayer.MovementSm.CollidableObjects = new List<GameObject> { heroEntity };
             otherPlayer.XPosition = 3;
@@ -527,40 +538,46 @@ namespace CyFiTests.Physics
         }
 
         [Test]
-        public void GivenHazard_ShouldLoseCollectablePercentage()
+        public void GivenHazard_ShouldResetPlayer()
         {
             //    start   air  air  air  air
             //      v      v    v    v    v 
-            // [ X ][ X ][ 1 ][ 1 ][ 1 ][ 1 ]
-            // [ X ][ X ][ 1 ][ 1 ][ 4 ][ 1 ]
-            //                       ^
-            //                     hazard
+            // [ X ][ X ][ 0 ][ 0 ][ 0 ][ 0 ]
+            // [ X ][ X ][ 0 ][ 0 ][ 0 ][ 0 ]
+            // [ 1 ][ 1 ][ 1 ][ 1 ][ 3 ][ 1 ] < solid
+            //   ^         ^         ^    
+            // solid     solid     hazard
 
             testWorld.map = new int[6][];
 
             for (int i = 0; i < 6; i++)
             {
-                testWorld.map[i] = new int[2] { (int)ObjectType.Air, (int)ObjectType.Air };
+                testWorld.map[i] = new int[3] { (int)ObjectType.Solid, (int)ObjectType.Air, (int)ObjectType.Air };
             }
             testWorld.map[4][0] = (int)ObjectType.Hazard;
-
+            testWorld.start = new Point(0,1);
+            heroEntity.YPosition = 1;
             heroEntity.Collected = 100;
 
             heroEntity.MovementSm.UpdateInput(InputCommand.RIGHT);
             heroPhysicsUnderTest.Update(heroEntity, otherPlayers, testWorld);
-            Assert.AreEqual(100, heroEntity.Collected);
+            Assert.AreEqual(1, heroEntity.XPosition);
+            Assert.AreEqual(1, heroEntity.YPosition);
 
             heroEntity.MovementSm.UpdateInput(InputCommand.RIGHT);
             heroPhysicsUnderTest.Update(heroEntity, otherPlayers, testWorld);
-            Assert.AreEqual(100, heroEntity.Collected);
+            Assert.AreEqual(2, heroEntity.XPosition);
+            Assert.AreEqual(1, heroEntity.YPosition);
 
             heroEntity.MovementSm.UpdateInput(InputCommand.RIGHT);
             heroPhysicsUnderTest.Update(heroEntity, otherPlayers, testWorld);
-            Assert.AreEqual(90, heroEntity.Collected);
+            Assert.AreEqual(0, heroEntity.XPosition);
+            Assert.AreEqual(1, heroEntity.YPosition);
 
             heroEntity.MovementSm.UpdateInput(InputCommand.RIGHT);
             heroPhysicsUnderTest.Update(heroEntity, otherPlayers, testWorld);
-            Assert.AreEqual(81, heroEntity.Collected);
+            Assert.AreEqual(1, heroEntity.XPosition);
+            Assert.AreEqual(1, heroEntity.YPosition);
         }
 
 

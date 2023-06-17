@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Engine.Communication;
+﻿namespace Engine.Communication;
 
 public class Bot
 {

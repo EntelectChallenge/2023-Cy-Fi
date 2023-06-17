@@ -19,16 +19,16 @@ public class Update : StateChange
     {
         change = change.Remove(0, changeIdentifier.Length);
         var sections = change.Split(" - ID: ");
-        
+
         ObjectId = int.Parse(sections.Last().Trim());
 
         var propertyInfo = sections[0].Split(" = ");
         var propertyName = propertyInfo[0].Trim();
         var propertyValue = propertyInfo[1].Trim();
-        
+
         PropertyName = propertyName;
         NewValue = propertyValue;
-        
+
         return this;
     }
 
@@ -39,8 +39,8 @@ public class Update : StateChange
         var property = type.GetProperty(PropertyName);
 
         if (property is null) throw new InvalidDataException();
-        
-        var newObj = Convert.ChangeType(NewValue, property.PropertyType); 
+
+        var newObj = Convert.ChangeType(NewValue, property.PropertyType);
         property.SetValue(state, newObj);
     }
 }

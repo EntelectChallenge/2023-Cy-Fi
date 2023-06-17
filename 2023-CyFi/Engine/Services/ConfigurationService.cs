@@ -13,13 +13,6 @@ namespace Engine.Services
             Value = new EngineConfig();
             engineOptions.Value.CopyPropertiesTo(Value);
 
-            var botCountEnvarString = Environment.GetEnvironmentVariable("BOT_COUNT");
-            var botCount = Value.BotCount;
-            if (!string.IsNullOrWhiteSpace(botCountEnvarString))
-            {
-                botCount = int.Parse(botCountEnvarString);
-            }
-
             var seedEnvarString = Environment.GetEnvironmentVariable("WORLD_SEED");
             if (!string.IsNullOrWhiteSpace(seedEnvarString))
             {

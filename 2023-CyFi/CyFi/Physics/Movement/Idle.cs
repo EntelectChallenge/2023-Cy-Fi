@@ -1,6 +1,5 @@
 ﻿using CyFi.Physics.Utils;
 using Domain.Enums;
-using Microsoft.Scripting.Runtime;
 
 namespace CyFi.Physics.Movement;
 

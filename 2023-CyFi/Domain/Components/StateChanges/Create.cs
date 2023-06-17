@@ -13,10 +13,10 @@ public class Create : StateChange
     {
         change = change.Remove(0, changeIdentifier.Length);
         var sections = change.Split(" - ID: ");
-        
+
         ObjectTypeName = sections[0].Trim();
         ObjectId = int.Parse(sections.Last().Trim());
-        
+
         return this;
     }
 
@@ -29,11 +29,11 @@ public class Create : StateChange
 
         var newObject = Activator.CreateInstance(assemblyName, ObjectTypeName);
         if (newObject is null) return;
-        
+
         var newState = newObject.Unwrap() switch
         {
             null => throw new InvalidDataException($"Cannot create object of class {ObjectTypeName}"),
-            State state => state ,
+            State state => state,
             _ => stateManager.StateDict[ObjectId]
         };
 
