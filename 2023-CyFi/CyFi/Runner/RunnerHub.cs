@@ -64,7 +64,7 @@ namespace CyFi.Runner
         /// </summary>
         /// <param name="gameObject"></param>
         /// <returns></returns>
-        /// 
+        ///
         public async Task<bool> PublishBotStates(List<BotStateDTO> botStates)
         {
             foreach (var botState in botStates)
@@ -130,13 +130,16 @@ namespace CyFi.Runner
             }
 
             //Check if bot has already had a command lined up on the queue
-            if (!engine.HasBotMoved(command))
+            lock (engine.CommandQueue)
             {
-                engine.CommandQueue.Enqueue(command);
-            }
-            else
-            {
-                Console.WriteLine($"{command.BotId} has moved for this tick");
+                if (!engine.HasBotMoved(command))
+                {
+                    engine.CommandQueue.Enqueue(command);
+                }
+                else
+                {
+                    Console.WriteLine($"{command.BotId} has moved for this tick");
+                }
             }
         }
         #endregion
