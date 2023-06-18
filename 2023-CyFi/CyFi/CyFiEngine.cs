@@ -13,8 +13,8 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.Python.Core;
 using Runner.Services;
+using System.Collections.Concurrent;
 using System.Drawing;
 using System.Timers;
 using static CyFi.Settings.GameSettings;
@@ -35,12 +35,13 @@ namespace CyFi
         public IGameLogger<CyFiState> StateLogger;
         public IGameLogger<GameComplete> GameCompleteLogger;
 
-        public Queue<BotCommand> CommandQueue;
+        public ConcurrentQueue<BotCommand> CommandQueue;
 
         public HubConnection hubConnection;
         public IHubContext<RunnerHub> context;
 
         private List<WorldObject> levels;
+        private Dictionary<int, int> advances = new();
 
         private string cloudSeed;
 
@@ -49,7 +50,7 @@ namespace CyFi
         public CyFiEngine(
             IOptions<CyFiGameSettings> settings,
             IHubContext<RunnerHub> context,
-            Queue<BotCommand> CommandQueue,
+            ConcurrentQueue<BotCommand> CommandQueue,
             ILogger<CyFiEngine> Logger,
             ILogger<CyFiState> StateLogger,
             ILogger<GameComplete> GameCompleteLogger,
@@ -66,6 +67,7 @@ namespace CyFi
             for (int level = 0; level < GameSettings.Levels.Count; level++)
             {
                 levels.Add(worldFactory.CreateWorld(GameSettings.Levels[level], level));
+                advances[level] = 0;
             }
 
             cyFiState = new CyFiState(
@@ -154,8 +156,7 @@ namespace CyFi
 
             }
 
-            hubConnection.InvokeAsync("PublishBotStates", botStates);
-
+            hubConnection.InvokeAsync("PublishBotStates", botStates).Wait();
         }
 
         public override void GameLoop()
@@ -168,18 +169,21 @@ namespace CyFi
 
             for (int i = 0; i < 3; i++)
             {
-                if (!CommandQueue.IsNullOrEmpty()) // perhaps only process commands for a certain duration of time, after that process the physics updates. Do this instead of the tick timer
+                if (CommandQueue.TryDequeue(out BotCommand? playerAction)) // perhaps only process commands for a certain duration of time, after that process the physics updates. Do this instead of the tick timer
                 {
-                    // Get the first bot command in the queue
-                    BotCommand playerAction = CommandQueue.Dequeue();
+                    if (playerAction == null)
+                    {
+                        return;
+                    }
 
                     // Get the bot it belongs too
                     playerObject = cyFiState.Bots.FirstOrDefault((bot) => bot.Id.Equals(playerAction.BotId));
 
-                    int numOnLevel = cyFiState.Bots.Count((bot) => bot.CurrentLevel == playerObject.CurrentLevel);
+                    int numAlreadyAdvanced = advances[playerObject.CurrentLevel];
 
-                    if (playerObject.Hero.Collected >= GameSettings.Collectables[numOnLevel - 1])
+                    if (playerObject.Hero.Collected >= GameSettings.Collectables[Math.Max(0, GameSettings.Collectables.Length - numAlreadyAdvanced - 1)])
                     {
+                        advances[playerObject.CurrentLevel]++;
                         AdvanceToLevel(playerObject);
                         playerObject.Hero.Collected = 0;
                         return;
@@ -244,7 +248,7 @@ namespace CyFi
         {
             if (bot.CurrentLevel < GameSettings.Levels.Count - 1)
             {
-                CommandQueue = new Queue<BotCommand>(CommandQueue.Where(command => command.BotId != bot.Id));
+                CommandQueue = new ConcurrentQueue<BotCommand>(CommandQueue.Where(command => command.BotId != bot.Id));
 
                 bot.CurrentLevel++;
                 bot.TotalPoints += bot.Hero.Collected;
@@ -322,11 +326,6 @@ namespace CyFi
         {
             Console.WriteLine("The Elapsed event was raised at {0}", e.SignalTime);
             GameLoop();
-        }
-
-        internal bool HasBotMoved(BotCommand command)
-        {
-            return CommandQueue.Contains(command);
         }
     }
 }

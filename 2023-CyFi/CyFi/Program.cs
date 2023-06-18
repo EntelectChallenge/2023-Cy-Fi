@@ -15,6 +15,7 @@ using Runner.Services;
 using Serilog;
 using Serilog.Context;
 using Serilog.Extensions.Logging;
+using System.Collections.Concurrent;
 using System.Reflection;
 
 namespace CyFi
@@ -72,7 +73,7 @@ namespace CyFi
                             services.AddSingleton<BotFactory>();
                             services.AddSingleton<ICloudCallbackFactory>(cloudCallbackFactory);
                             services.AddSingleton<ICloudIntegrationService>(cloudIntegrationService);
-                            services.AddSingleton<Queue<BotCommand>>();
+                            services.AddSingleton<ConcurrentQueue<BotCommand>>();
                             services.AddSingleton<CyFiEngine>();
                             services.AddSingleton<WorldFactory>();
                             services.AddSignalR(service =>

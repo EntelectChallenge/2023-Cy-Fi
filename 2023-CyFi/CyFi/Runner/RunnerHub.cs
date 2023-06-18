@@ -67,10 +67,10 @@ namespace CyFi.Runner
         /// 
         public async Task PublishBotStates(List<BotStateDTO> botStates)
         {
-            foreach (var botState in botStates)
+            await Parallel.ForEachAsync(botStates, async (botState, cancellationToken) =>
             {
-                await Clients.Client(botState.ConnectionId).SendAsync("ReceiveBotState", botState);
-            }
+                await Clients.Client(botState.ConnectionId).SendAsync("ReceiveBotState", botState, cancellationToken);
+            });
         }
 
         /// <summary>
@@ -128,8 +128,7 @@ namespace CyFi.Runner
                 return;
             }
 
-            //Check if bot has already had a command lined up on the queue
-            if (!engine.HasBotMoved(command))
+            if (!engine.CommandQueue.Any(c => c.BotId == command.BotId))
             {
                 engine.CommandQueue.Enqueue(command);
             }

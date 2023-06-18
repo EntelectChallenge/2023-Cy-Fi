@@ -18,6 +18,7 @@ using Moq;
 using NUnit.Framework;
 using Runner.Factories;
 using Runner.Services;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 
 namespace CyFiTests
@@ -36,7 +37,7 @@ namespace CyFiTests
         CyFiEngine cyFiEngineUnderTest;
         Bot testBot;
 
-        Queue<BotCommand> botCommandQueue;
+        ConcurrentQueue<BotCommand> botCommandQueue;
 
         ILogger<CyFiEngine> engineNullLogger = new NullLogger<CyFiEngine>();
         ILogger<CyFiState> stateNullLogger = new NullLogger<CyFiState>();
@@ -62,7 +63,7 @@ namespace CyFiTests
             mockCloudIntegrationService = new Mock<CloudIntegrationService>(new AppSettings(), new NullLogger<CloudIntegrationService>(), mockCloudCallbackFactory.Object);
             hubConnection = new HubConnectionBuilder().WithUrl("http://127.0.0.1:5000/runnerhub").Build();
 
-            botCommandQueue = new Queue<BotCommand>();
+            botCommandQueue = new ConcurrentQueue<BotCommand>();
             
             cyFiEngineUnderTest = new(testSettings, mockContext.Object, botCommandQueue, engineNullLogger, stateNullLogger, gameCompleteNullLogger, null, mockWorldFactory.Object, mockCloudIntegrationService.Object);
 
@@ -160,13 +161,23 @@ namespace CyFiTests
             Assert.AreEqual(1, testBot.CurrentLevel);
             Assert.AreEqual(0, testBot2.CurrentLevel);
 
+            cyFiEngineUnderTest.CommandQueue.Enqueue(new() { Action = InputCommand.None, BotId = testBot.Id });
+
+            // Act
+            testBot.Hero.Collected = 20;
+            cyFiEngineUnderTest.GameLoop();
+
+            // Assert
+            Assert.AreEqual(2, testBot.CurrentLevel);
+            Assert.AreEqual(0, testBot2.CurrentLevel);
+
             // Act
             cyFiEngineUnderTest.CommandQueue.Enqueue(new() { Action = InputCommand.None, BotId = testBot2.Id });
             testBot2.Hero.Collected = 10;
             cyFiEngineUnderTest.GameLoop();
 
             // Assert
-            Assert.AreEqual(1, testBot.CurrentLevel);
+            Assert.AreEqual(2, testBot.CurrentLevel);
             Assert.AreEqual(1, testBot2.CurrentLevel);
         }
     }
