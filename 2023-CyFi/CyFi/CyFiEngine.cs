@@ -322,10 +322,16 @@ namespace CyFi
             TickTimer.AutoReset = true;
         }
 
+ bool inLoop = false;
         private void OnTimedEvent(object? sender, ElapsedEventArgs e)
         {
-            Console.WriteLine("The Elapsed event was raised at {0}", e.SignalTime);
-            GameLoop();
+             if (!inLoop)
+            {
+                inLoop = true;
+                Console.WriteLine("The Elapsed event was raised at {0}", e.SignalTime);
+                GameLoop();
+                inLoop = false;
+            }
         }
     }
 }
