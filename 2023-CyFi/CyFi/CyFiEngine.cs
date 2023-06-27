@@ -4,10 +4,12 @@ using CyFi.Models;
 using CyFi.RootState;
 using CyFi.Runner;
 using Domain.Components;
+using Domain.Enums;
 using Domain.Exceptions;
 using Domain.Models;
 using Domain.Objects;
 using Engine;
+using Engine.Communication;
 using Logger;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -31,6 +33,7 @@ namespace CyFi
 
         private readonly BotFactory BotFactory;
         public static Timer TickTimer;
+        public static Timer ConnectionTimer;
         public IGameLogger<CyFiEngine> Logger;
         public IGameLogger<CyFiState> StateLogger;
         public IGameLogger<GameComplete> GameCompleteLogger;
@@ -88,15 +91,21 @@ namespace CyFi
 
             // Create a timer with a given interval
             TickTimer = new Timer(GameSettings.TickTimer);
+
+            int timeoutMillis = int.TryParse(Environment.GetEnvironmentVariable("BOT_TIMEOUT"), out timeoutMillis) ? timeoutMillis : 300000; // 5 minutes
+            ConnectionTimer = new(timeoutMillis);
+            ConnectionTimer.Elapsed += BotConnectionTimeout;
+            ConnectionTimer.AutoReset = false;
+            ConnectionTimer.Enabled = true;
         }
 
         public HubConnection SetHubConnection(ref HubConnection connection) => hubConnection = connection;
 
-        public Guid RegisterBot(string nickName, string connectionId)
+        public Guid RegisterBot(Guid token, string nickName, string connectionId)
         {
             if (cyFiState.Bots.Count < GameSettings.NumberOfPlayers)
             {
-                Bot bot = BotFactory.CreateBot(nickName, connectionId);
+                Bot bot = BotFactory.CreateBot(token, nickName, connectionId);
                 Point startPosition = cyFiState.Levels[bot.CurrentLevel].start;
                 bot.Hero.XPosition = startPosition.X;
                 bot.Hero.YPosition = startPosition.Y;
@@ -181,10 +190,11 @@ namespace CyFi
 
                     int numAlreadyAdvanced = advances[playerObject.CurrentLevel];
 
-                    if (playerObject.Hero.Collected >= GameSettings.Collectables[Math.Max(0, GameSettings.Collectables.Length - numAlreadyAdvanced - 1)])
+                    if (playerObject.Hero.Collected >= GameSettings.Collectables[Math.Max(0, GameSettings.Collectables.Length - playerObject.CurrentLevel - 1)])
                     {
                         advances[playerObject.CurrentLevel]++;
                         AdvanceToLevel(playerObject);
+                        
                         playerObject.Hero.Collected = 0;
                         return;
                     }
@@ -326,6 +336,17 @@ namespace CyFi
         {
             Console.WriteLine("The Elapsed event was raised at {0}", e.SignalTime);
             GameLoop();
+        }
+
+        private void BotConnectionTimeout(object? sender, ElapsedEventArgs e)
+        {
+            if (cyFiState.Bots.Count < GameSettings.NumberOfPlayers)
+            {
+                var failReason = $"Only {cyFiState.Bots.Count} out of {GameSettings.NumberOfPlayers} bots connected in time, runner is shutting down.";
+                Logger.Log(LogLevel.Error, failReason);
+
+                cloudIntegrationService.Announce(CloudCallbackType.Failed, new Exception(failReason)).Wait();
+            }
         }
     }
 }

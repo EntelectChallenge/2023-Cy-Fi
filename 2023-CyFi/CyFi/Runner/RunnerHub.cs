@@ -97,12 +97,12 @@ namespace CyFi.Runner
         /// </summary>
         /// <param name="nickName"></param>
         /// <returns></returns>
-        public async Task Register(string nickName)
+        public async Task Register(Guid token, string nickName)
         {
             _logger.Log(LogLevel.Information, $"Registering Bot with nickname: {nickName}");
             try
             {
-                Guid botId = engine.RegisterBot(nickName, Context.ConnectionId);
+                Guid botId = engine.RegisterBot(token, nickName, Context.ConnectionId);
                 _logger.Log(LogLevel.Debug, $"Successfully registered bot with nickname {nickName} and id {botId}");
 
                 await Clients.Caller.SendAsync("Registered", botId);

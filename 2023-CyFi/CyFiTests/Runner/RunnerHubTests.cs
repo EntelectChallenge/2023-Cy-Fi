@@ -98,11 +98,11 @@ namespace CyFiTests.Runner
             mockBot.Object.NickName = "testBot";
 
             mockBot.Object.Hero = new HeroEntity(Id);
-            mockBotFactory.Setup(f => f.CreateBot("testBot", connectionId.ToString())).Returns(mockBot.Object);
+            mockBotFactory.Setup(f => f.CreateBot(botId, "testBot", connectionId.ToString())).Returns(mockBot.Object);
 
             mockHubCallerContext.Setup(c => c.ConnectionId).Returns(connectionId.ToString());
 
-            await runnerHubUnderTest.Register("testBot");
+            await runnerHubUnderTest.Register(botId, "testBot");
 
             mockCaller.Verify(clients => clients.Caller, Times.Once());
 

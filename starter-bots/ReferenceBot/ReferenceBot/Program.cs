@@ -48,6 +48,10 @@ namespace ReferenceBot
                 Environment.GetEnvironmentVariable("BOT_NICKNAME")
                 ?? Configuration.GetSection("BotNickname").Value;
 
+            var token =
+                Environment.GetEnvironmentVariable("Token") ??
+                Environment.GetEnvironmentVariable("REGISTRATION_TOKEN");
+
             var port = Configuration.GetSection("RunnerPort");
 
             var url = ip + ":" + port.Value + "/runnerhub";
@@ -100,7 +104,7 @@ namespace ReferenceBot
                 return Task.CompletedTask;
             };
 
-            connection.InvokeAsync("Register", botNickname);
+            connection.InvokeAsync("Register", token, botNickname);
             if (gui)
             {
                 game.Run();

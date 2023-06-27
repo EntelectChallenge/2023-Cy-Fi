@@ -17,6 +17,8 @@ public class Main {
 
         String environmentIp = System.getenv("RUNNER_IPV4");
         String environmentNickname = System.getenv("BOT_NICKNAME");
+        String token = System.getenv("Token");
+        token = (token != null) ? token : System.getenv("REGISTRATION_TOKEN");
 
         String ip = (environmentIp != null && !environmentIp.isBlank()) ? environmentIp : "localhost";
         ip = ip.startsWith("http://") ? ip : "http://" + ip;
@@ -50,7 +52,7 @@ public class Main {
 
         Thread.sleep(1000);
         System.out.println("Registering with the runner...");
-        hubConnection.send("Register", nickname);
+        hubConnection.send("Register", token, nickname);
 
         hubConnection.on("ReceiveGameComplete", (state) -> {
             System.out.println("Game complete");
