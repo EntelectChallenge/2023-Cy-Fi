@@ -338,6 +338,7 @@ namespace Domain.Objects
                 collectibleAmount = PlaceObjects.CalculateLevelCollectableTotal(level);
                 //Calculating how many hazards should be placed
                 hazardAmount = PlaceObjects.CalculateLevelHazardsTotal(totalPlatformLength, level);
+
             }
             else
             {
@@ -345,7 +346,10 @@ namespace Domain.Objects
                 collectibleAmount = PlaceObjects.CalculateBasicLevelCollectableTotal(totalPlatformLength, level);
                 //Calculating how many hazards should be placed
                 hazardAmount = PlaceObjects.CalculateBasicLevelHazardTotal(totalPlatformLength, level);
+
             }
+                Console.WriteLine($"COLLECTIBLE AMOUNT: {collectibleAmount}");
+                Console.WriteLine($"HAZARD AMOUNT: {hazardAmount}");
 
             //Determine how far apart the collectibles should be placed
             var collectibleSpacing = (int)Math.Floor(totalPlatformLength / collectibleAmount);

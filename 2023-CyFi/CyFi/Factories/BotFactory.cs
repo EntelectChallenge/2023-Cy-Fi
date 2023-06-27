@@ -15,11 +15,11 @@ namespace CyFi.Factories
             this.loggerFactory = loggerFactory;
         }
 
-        public virtual Bot CreateBot(string nickName, string connectionId)
+        public virtual Bot CreateBot(Guid token, string nickName, string connectionId)
         {
             ILogger<Bot> botLogger = loggerFactory.CreateLogger<Bot>();
 
-            return new Bot(botLogger, nickName, connectionId);
+            return new Bot(botLogger, nickName, connectionId, token);
         }
     }
 }

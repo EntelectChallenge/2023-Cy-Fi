@@ -8,6 +8,8 @@ const runnerURL = runnerIP.startsWith("http://")
 
 const botNickname = process.env.BOT_NICKNAME ?? "TSBot";
 
+const token = process.env.Token ?? process.env.REGISTRATION_TOKEN;
+
 const state = {
 	connected: false,
 	botId: "",
@@ -41,7 +43,7 @@ connection.onclose((error) => {
 (async () => {
 	try {
 		await connection.start();
-		await connection.invoke("Register", botNickname);
+		await connection.invoke("Register", token, botNickname);
 	} catch (ex) {
 		console.error("Error connecting: ", ex);
 	}

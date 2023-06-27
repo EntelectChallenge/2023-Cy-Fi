@@ -32,6 +32,10 @@ namespace NETCoreBot
                 Environment.GetEnvironmentVariable("BOT_NICKNAME")
                 ?? Configuration.GetSection("BotNickname").Value;
 
+            var token =
+                Environment.GetEnvironmentVariable("Token") ??
+                Environment.GetEnvironmentVariable("REGISTRATION_TOKEN");
+
             var port = Configuration.GetSection("RunnerPort");
 
             var url = ip + ":" + port.Value + "/runnerhub";
@@ -75,7 +79,7 @@ namespace NETCoreBot
                 return Task.CompletedTask;
             };
 
-            await connection.InvokeAsync("Register", botNickname);
+            await connection.InvokeAsync("Register", token, botNickname);
             while (connection.State == HubConnectionState.Connected)
             {
                 var state = botService.GetBotState();

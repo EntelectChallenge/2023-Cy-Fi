@@ -20,6 +20,7 @@ if __name__ == "__main__":
     # Configuration
     runner_ip = os.getenv("RUNNER_IPV4") or "localhost"
     bot_nickname = os.getenv("BOT_NICKNAME") or "PyBot"
+    token = os.getenv("Token") or os.getenv("REGISTRATION_TOKEN")
     runner_ip = runner_ip if runner_ip.startswith("http://") else f"http://{runner_ip}"
 
     # Build SignalR connection to Runner Hub
@@ -73,7 +74,7 @@ if __name__ == "__main__":
     connection.start()
     time.sleep(1)
     print("Registering bot")
-    connection.send("Register", [bot_nickname])
+    connection.send("Register", [str(token), bot_nickname])
 
     try:
         while state.connected:
