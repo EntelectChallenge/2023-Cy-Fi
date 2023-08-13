@@ -127,8 +127,8 @@ namespace CyFi.Runner
             {
                 return;
             }
-
-            if (!engine.CommandQueue.Any(c => c.BotId == command.BotId))
+            //added check to see whether the bot is registered or not
+            if (engine.IsBotRegistered(command.BotId) && !engine.CommandQueue.Any(c => c.BotId == command.BotId))
             {
                 engine.CommandQueue.Enqueue(command);
             }
