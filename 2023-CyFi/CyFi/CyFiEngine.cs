@@ -131,6 +131,12 @@ namespace CyFi
             }
         }
 
+        public bool IsBotRegistered(Guid botId)
+        {
+            return cyFiState.Bots.Any(bot => bot.Id == botId);
+
+        }
+
         public async Task StartGame()
         {
             if (hubConnection.State != HubConnectionState.Connected)
@@ -182,39 +188,30 @@ namespace CyFi
                 {
                     if (playerAction == null)
                     {
-                        return;
+                        i--;//this command was not processed because it was invalid, it shouldn't block another command
+                        continue;//it should continue processing commands and publishing the game state etc
                     }
 
                     // Get the bot it belongs too
                     playerObject = cyFiState.Bots.FirstOrDefault((bot) => bot.Id.Equals(playerAction.BotId));
-
-                    int numAlreadyAdvanced = advances[playerObject.CurrentLevel];
-
-                    if (playerObject.Hero.Collected >= GameSettings.Collectables[Math.Max(0, GameSettings.Collectables.Length - playerObject.CurrentLevel - 1)])
-                    {
-                        advances[playerObject.CurrentLevel]++;
-                        AdvanceToLevel(playerObject);
-                        
-                        playerObject.Hero.Collected = 0;
-                        return;
-                    }
-
                     // If there is not bot, continue
                     if (playerObject == null)
                     {
                         Logger.Log(LogLevel.Error, $"Bot not found for ID {playerAction.BotId}");
-                        return;
+                        i--;//this command was not processed because it was an invalid bot, it shouldn't block a valid bot's command
+                        continue;//it should continue processing commands and publishing the game state etc
+                        //with added check at time of queueing command, this should no longer happen
                     }
-
+                    
                     List<HeroEntity> otherPlayers = cyFiState.Bots.Where((bot) => bot.CurrentLevel == playerObject.CurrentLevel).Except(new List<Bot>() { playerObject }).Select((bot) => bot.Hero).ToList();
 
                     Logger.Log(LogLevel.Information, $"Bot: {playerObject.Id} send command {playerAction.Action}");
 
                     Console.WriteLine($"Current state of bot: {playerObject.Hero.MovementSm.CurrentState}");
 
-                    // Update the bot based on the bot command and the movement state?
-
+                    
                     Logger.Log(LogLevel.Information, $"Bot {playerObject.Id}: command updated {playerAction.Action.ToString()}");
+                    // Update the bot based on the bot command and the movement state?
                     playerObject.Hero.UpdateInput(
                         playerAction
                     );
@@ -231,7 +228,24 @@ namespace CyFi
             if (TickTimer.Enabled)
             {
                 cyFiState.Update();
+                bool GameFinished = false;
+                foreach (var bot in cyFiState.Bots)
+                {
+                    if (bot.Hero.Collected >= GameSettings.Collectables[Math.Max(0, GameSettings.Collectables.Length - bot.CurrentLevel - 1)])
+                    {
+                        advances[bot.CurrentLevel]++;
+                        bool finished = AdvanceToLevel(bot);
+                        GameFinished = GameFinished || finished;
 
+                        if (!finished)
+                            bot.Hero.Collected = 0;
+                    }
+                }
+                if (GameFinished)
+                {
+                    EndGame();
+                    return;
+                }
                 cyFiState.Tick++;
 
                 PublishBotStates();
@@ -253,8 +267,12 @@ namespace CyFi
                 GracefulShutdown();
             }
         }
-
-        public void AdvanceToLevel(Bot bot)
+        /// <summary>
+        /// Advanced the bot to the next level. Returns true if the bot finished the game
+        /// </summary>
+        /// <param name="bot">Bot to progress</param>
+        /// <returns>True if the bot finished the game</returns>
+        public bool AdvanceToLevel(Bot bot)
         {
             if (bot.CurrentLevel < GameSettings.Levels.Count - 1)
             {
@@ -268,13 +286,16 @@ namespace CyFi
                 bot.Hero.YPosition = startPosition.Y;
 
                 bot.Hero.MovementSm.World = cyFiState.Levels[bot.CurrentLevel];
+                
             }
             else
             {
                 TickTimer.Stop();
                 bot.TotalPoints += 20;
-                EndGame();
+                return true;
+                
             }
+            return false;
         }
 
         private void EndGame()
