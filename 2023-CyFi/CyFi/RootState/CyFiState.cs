@@ -45,7 +45,8 @@ namespace CyFi.RootState
             {
                 Console.WriteLine($"Update Physics component for bot: {bot.NickName}");
 
-                bot.Hero.PhysicsComponent.Update(bot.Hero, Bots.Except(new List<Bot>() { bot }).Select((bot) => bot.Hero).ToList(), Levels[bot.CurrentLevel]);
+                List<HeroEntity> opposingPlayers = Bots.Except(new List<Bot>() { bot }).Where(opposingBot => opposingBot.CurrentLevel == bot.CurrentLevel).Select(bot => bot.Hero).ToList();
+                bot.Hero.PhysicsComponent.Update(bot.Hero, opposingPlayers, Levels[bot.CurrentLevel]);
                 bot.LastUpdated = DateTime.Now;
             });
         }
