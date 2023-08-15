@@ -9,7 +9,6 @@ using Domain.Exceptions;
 using Domain.Models;
 using Domain.Objects;
 using Engine;
-using Engine.Communication;
 using Logger;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -157,7 +156,7 @@ namespace CyFi
             List<BotStateDTO> botStates = new List<BotStateDTO>();
             foreach (var bot in cyFiState.Bots)
             {
-                cloudIntegrationService.UpdatePlayer(bot.Id.ToString(), matchPoints: bot.TotalPoints);
+                cloudIntegrationService.UpdatePlayer(bot.Id.ToString());
                 var oppositionBotsOnSameLevel = cyFiState.Bots.Except(new List<Bot> { bot }).Where(b => b.CurrentLevel == bot.CurrentLevel).ToList();
 
                 botStates.Add(new BotStateDTO(bot, oppositionBotsOnSameLevel, bot.Hero, cyFiState.Levels[bot.CurrentLevel], cyFiState.Tick));
@@ -194,7 +193,7 @@ namespace CyFi
                     {
                         advances[playerObject.CurrentLevel]++;
                         AdvanceToLevel(playerObject);
-                        
+
                         playerObject.Hero.Collected = 0;
                         return;
                     }
@@ -298,7 +297,7 @@ namespace CyFi
                         Score = bot.TotalPoints,
                         Id = bot.Id.ToString(),
                         Nickname = bot.NickName,
-                        MatchPoints = (cyFiState.Bots.Count - (index + 1)) * 2
+                        MatchPoints = cyFiState.Bots.Count - index
                     }
                 ).ToList(),
                 WorldSeeds = GameSettings.Levels.Select(l => l.Seed).ToList(),
@@ -308,7 +307,8 @@ namespace CyFi
             for (int index = 0; index < rankedBots.Count; index++)
             {
                 var currentBot = rankedBots[index];
-                cloudIntegrationService.UpdatePlayer(currentBot.Id.ToString(), finalScore: currentBot.TotalPoints, matchPoints: currentBot.TotalPoints, placement: index + 1);
+                int matchPoint = gameComplete.Players.Find(p => string.Equals(p.Id, currentBot.Id.ToString())).MatchPoints;
+                cloudIntegrationService.UpdatePlayer(currentBot.Id.ToString(), finalScore: currentBot.TotalPoints, matchPoints: matchPoint, placement: index + 1);
             }
 
             GameCompleteLogger.File(gameComplete, null, "GameComplete");

@@ -174,7 +174,7 @@ public static class Movements
         {
             if (hero.Collected < player.Collected)
             {
-                var distance = CalculateDistance(heroXvalue, heroYvalue, player.NextXPosition, player.NextYPosition);
+                var distance = CalculateDistance(heroXvalue, heroYvalue, player.XPosition, player.YPosition);
                 var percentage = RangeData.CalculatePercentage(distance, radarRange);
                 int directionFromOpponent = (int)RangeData.GetDirection(heroXvalue, heroYvalue, player.NextXPosition, player.NextYPosition);
                 // var directionNonMainToMain = GetDirection(player.NextXPosition, player.NextYPosition, heroXvalue, heroYvalue);
@@ -214,7 +214,7 @@ public static class Movements
         public static InputCommand GetDirection(int x1, int y1, int x2, int y2)
         {
             if (x1 > x2)
-                return y1 > y2 ? InputCommand.DOWNLEFT : y1 < y2 ? InputCommand.DOWNRIGHT : InputCommand.LEFT;
+                return y1 > y2 ? InputCommand.DOWNLEFT : y1 < y2 ? InputCommand.UPLEFT : InputCommand.LEFT;
             else if (x1 < x2)
                 return y1 > y2 ? InputCommand.DOWNRIGHT : y1 < y2 ? InputCommand.UPRIGHT : InputCommand.RIGHT;
             else
